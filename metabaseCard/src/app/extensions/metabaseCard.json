@@ -1,0 +1,16 @@
+{
+"type": "crm-card",
+"data": {
+    "title": "Metabase Booking data",
+    "uid": "metabase-card",
+    "location": "crm.record.tab",
+    "module": {
+    "file": "MetabaseCard.jsx"
+    },
+    "objectTypes": [
+    {
+        "name": "deals"
+    }
+    ]
+}
+}
