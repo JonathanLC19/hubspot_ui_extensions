@@ -1,0 +1,20 @@
+{
+  "appFunctions": {
+    "myFunc": {
+      "file": "issue_interpreter.js",
+      "secrets": ["OPENAI_API_KEY"]
+    },
+    "issueFinder": {
+      "file": "issueFinder.js",
+      "secrets": ["OPENAI_API_KEY"]
+    },
+    "updateIssueType": {
+      "file": "updateIssueType.js",
+      "secrets": []
+    },
+    "getIssueType": {
+      "file": "getIssueType.js",
+      "secrets": []
+    }
+  }
+}

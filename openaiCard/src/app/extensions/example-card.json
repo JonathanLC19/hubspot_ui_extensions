@@ -1,0 +1,16 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "OpenAI Card",
+    "uid": "openai_card",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "Example.jsx"
+    },
+    "objectTypes": [
+      {
+        "name": "tickets"
+      }
+    ]
+  }
+}

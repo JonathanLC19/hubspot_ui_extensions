@@ -1,0 +1,12 @@
+{
+  "name": "metabase_data",
+  "version": "0.1.0",
+  "author": "Jonathan López",
+  "license": "MIT",
+  "dependencies": {
+    "@hubspot/api-client": "^11.2.0",
+    "axios": "^0.27.2",
+    "dataframe-js": "latest",
+    "dotenv": "^10.0.0"
+  }
+}

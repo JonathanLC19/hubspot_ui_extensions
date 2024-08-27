@@ -1,0 +1,21 @@
+{
+    "name": "metabaseCard",
+    "description": "Search associated booking in Metabase",
+    "uid": "metabasecard20240502",
+    "scopes": [
+      "crm.objects.contacts.read",
+      "crm.objects.contacts.write",
+      "crm.objects.deals.read",
+      "crm.objects.deals.write"
+    ],
+    "public": false,
+    "extensions": {
+      "crm": {
+        "cards": [
+          {
+            "file": "extensions/metabaseCard.json"
+          }
+        ]
+      }
+    }
+  }
