@@ -1,0 +1,8 @@
+{
+  "appFunctions": {
+    "getGxfProperties": {
+      "file": "getGxfProperties.js",
+      "secrets": []
+    }
+  }
+}

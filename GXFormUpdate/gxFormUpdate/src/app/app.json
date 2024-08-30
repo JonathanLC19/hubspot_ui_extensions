@@ -1,0 +1,23 @@
+{
+  "name": "GX FORM - Update Info",
+  "description": "Card to update GX Form information on tickets",
+  "uid": "update_gxform_app",
+  "scopes": [
+    "tickets",
+    "collector.graphql_schema.read",
+    "collector.graphql_query.execute",
+    "crm.objects.contacts.write",
+    "crm.objects.contacts.read",
+    "crm.schemas.contacts.read"
+  ],
+  "public": false,
+  "extensions": {
+    "crm": {
+      "cards": [
+        {
+          "file": "extensions/updateGxForm-card.json"
+        }
+      ]
+    }
+  }
+}

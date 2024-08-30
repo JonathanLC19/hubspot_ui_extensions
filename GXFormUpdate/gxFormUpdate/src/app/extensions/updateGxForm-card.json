@@ -1,0 +1,12 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "GX Form - Update Ticket Info",
+    "uid": "update_gxform_app",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "gxUpdateCard.jsx"
+    },
+    "objectTypes": [{ "name": "tickets" }]
+  }
+}

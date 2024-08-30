@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import {
   LoadingSpinner,
   Text,
-  Panel,
   Table,
   TableHead,
   TableRow,
@@ -11,7 +10,8 @@ import {
   TableCell,
   Heading,
   hubspot,
-  Button
+  Flex,
+  Box
 } from '@hubspot/ui-extensions';
 import { CrmActionButton } from '@hubspot/ui-extensions/crm';
 
@@ -83,42 +83,62 @@ const Extension = ({ runServerless, fetchProperties }) => {
     return <Text>No Metabase data available.</Text>;
   }
 
-  console.log("Rendering metabaseData:", JSON.stringify(metabaseData, null, 2));
-
-  console.log("Rendering component with state:", {
-    backofficeId,
-    metabaseId: metabaseData.metabaseId,
-    columnCount: metabaseData.columnNames.length,
-    dataRowCount: metabaseData.data.length,
-    firstRowSample: metabaseData.data[0].slice(0, 5) // First 5 items of the first row
-  });
+  // Helper function to get value from metabaseData
+  const getValue = (key) => {
+    const index = metabaseData.columnNames.indexOf(key);
+    return index !== -1 ? (metabaseData.data[0][index] !== null && metabaseData.data[0][index] !== undefined ? metabaseData.data[0][index].toString() : 'N/A') : 'N/A';
+  };
 
   return (
     <>
-      <Heading>Metabase Data</Heading>
-      <Text>
-        HubSpot Backoffice ID: {backofficeId}
-      </Text>
-      <Text>
-        Metabase ID: {metabaseData.metabaseId}
-      </Text>
-      <Text>Number of columns: {metabaseData.columnNames.length}</Text>
-      <Text>Number of data rows: {metabaseData.data.length}</Text>
-      <Heading>First Row Data:</Heading>
-      {metabaseData.data[0].map((cell, index) => (
-        <Text key={index}>
-          {metabaseData.columnNames[index]}: {cell !== null && cell !== undefined ? cell.toString() : 'N/A'}
-        </Text>
-      ))}
+    <Heading>Booking Data</Heading>
+    <Flex direction={"row"} justify={'between'} wrap={'wrap'} gap={'medium'}>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Check-in Date</Text>
+        <Text>{getValue('check_in')}</Text>
+      </Box>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Check-out Date</Text>
+        <Text>{getValue('check_out')}</Text>
+      </Box>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Apartment</Text>
+        <Text>{getValue('codename')}</Text>
+      </Box>
+    </Flex>
+    <Flex direction={"row"} justify={'between'} wrap={'wrap'} gap={'large'}>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Email</Text>
+        <Text>{getValue('email')}</Text>
+      </Box>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Name</Text>
+        <Text>{getValue('name')}</Text>
+      </Box>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Last Name</Text>
+        <Text>{getValue('last_name')}</Text>
+      </Box>
+    </Flex>
+    <Flex direction={"row"} justify={'between'} wrap={'wrap'} gap={'large'}>
+      <Box>
+        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Phone</Text>
+        <Text>{getValue('phone')}</Text>
+      </Box>
+    </Flex>
+
+      <Text>HubSpot Backoffice ID: {backofficeId}</Text>
+      <Text>Metabase ID: {metabaseData.metabaseId}</Text>
+      
       <CrmActionButton
         actionType="EXTERNAL_URL"
         actionContext={{
           href: 'https://prod.backoffice.ukio.com/bookings/?id=' + metabaseData.metabaseId,
         }}
-        variant="secondary"
-    >
-      See in Backoffice
-    </CrmActionButton>
+        variant="primary"
+      >
+        View in Backoffice
+      </CrmActionButton>
     </>
   );
 };

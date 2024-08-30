@@ -40,7 +40,7 @@ exports.main = async (context = {}) => {
     const headers = { 'X-Metabase-Session': token };
 
     // Use the correct card ID
-    const cardId = 1705;
+    const cardId = 1876;
     
     // First, fetch the card definition
     console.log(`Fetching Metabase card ${cardId} definition...`);

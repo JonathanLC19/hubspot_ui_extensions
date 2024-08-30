@@ -1,0 +1,22 @@
+{
+  "name": "gxformupdatecard",
+  "version": "0.1.0",
+  "scripts": {
+    "postinstall": "cd ./src/app/extensions/ && npm install && cd ../app.functions && npm install",
+    "format": "prettier --write \"src/**/*.{js,jsx}\""
+  },
+  "author": {
+    "name": "jonathan lopez",
+    "email": "jonathan.lopez@ukio.com"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@hubspot/cli": "^5.4.0",
+    "@hubspot/ui-extensions": "^0.8.31",
+    "axios": "^1.7.5",
+    "dataframe-js": "^1.4.4"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3"
+  }
+}
