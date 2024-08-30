@@ -1,17 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  Button,
-  Flex,
-  hubspot,
-  LoadingSpinner,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TableHeader,
-  Table,
-  Heading,
-} from "@hubspot/ui-extensions";
+import { Button, Flex, hubspot, LoadingSpinner, Heading } from "@hubspot/ui-extensions";
 import TableRowComponent from "./components/TableRowComponent";
 
 hubspot.extend(({ context, runServerlessFunction, actions }) => (
@@ -78,35 +66,30 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
       )}
 
       {contacts && (
-        <Flex direction={"column"} wrap={"wrap"} gap={"large"}>
-          <Heading>GX Form Info</Heading>
-          <Table bordered={true} width="auto">
-            <TableHead>
+        <>
+          <Flex direction={"column"} justify={"left"} gap={"large"}>
+            <Heading>GX Form Info</Heading>
+          </Flex>
+          <Flex direction={"row"} justify={"left"} wrap={"nowrap"} gap={"extra-small"}>
+            {/* <TableHead>
               <TableRow>
                 <TableHeader>Form Submission</TableHeader>
                 <TableHeader>Ticket Property</TableHeader>
                 <TableHeader>Update Ticket Property</TableHeader>
               </TableRow>
-            </TableHead>
-            <TableBody>
-              {contacts.map((contact) => (
-                <TableRow>
-                  <TableRowComponent
-                    prop_name_1={"Case Description"}
-                    prop_value_1={contact.gx_form___case_description}
-                    prop_name_2={"Ticket Description"}
-                    prop_value_2={ticketDescription}
-                  />
-                  <TableCell>
-                    <Button onClick={() => console.log("Clicked")} variant="secondary" size="xs">
-                      Update
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </Flex>
+            </TableHead> */}
+            {contacts.map((contact) => (
+              <>
+                <TableRowComponent
+                  prop_name_1={"Case Description"}
+                  prop_value_1={contact.gx_form___case_description}
+                  prop_name_2={"Ticket Description"}
+                  prop_value_2={ticketDescription}
+                />
+              </>
+            ))}
+          </Flex>
+        </>
       )}
     </>
   );
