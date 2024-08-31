@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "scripts": {
     "postinstall": "cd ./src/app/extensions/ && npm install && cd ../app.functions && npm install",
-    "format": "prettier --write \"src/**/*.{js,jsx}\""
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
   },
   "author": {
     "name": "jonathan lopez",

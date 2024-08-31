@@ -3,6 +3,14 @@
     "getGxfProperties": {
       "file": "getGxfProperties.js",
       "secrets": []
+    },
+    "updateTicketProps": {
+      "file": "updateTicketProps.js",
+      "secrets": []
+    },
+    "getTicketProps": {
+      "file": "getTicketProps.js",
+      "secrets": []
     }
   }
 }
