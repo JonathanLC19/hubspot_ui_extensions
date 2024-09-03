@@ -15,7 +15,11 @@ exports.main = async (context = {}) => {
     "subject",
     "apartment_access_guest_confirmation",
     "reservation_number",
-    "apartment_booked__jonathan_test_"
+    "apartment_booked__jonathan_test_",
+    "apartment_access_preference",
+    "apartment_access____date___time_requested_by_guest",
+    "exists_reservation_id",
+    "whatsapp_comms_preference"
   );
   return apiResponse;
 };

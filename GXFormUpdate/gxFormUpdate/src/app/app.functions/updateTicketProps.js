@@ -9,18 +9,17 @@ exports.main = async (context = {}) => {
     [prop_name]: prop_value,
   };
   const SimplePublicObjectInput = { properties };
-  const idProperty = undefined;
 
   try {
-    const apiResponse = await hubspotClient.crm.tickets.basicApi.update(
-      ticketId,
-      SimplePublicObjectInput,
-      idProperty
-    );
-    console.log(JSON.stringify(apiResponse, null, 2));
+    await hubspotClient.crm.tickets.basicApi.update(ticketId, SimplePublicObjectInput);
+
+    // Fetch the updated ticket to get all properties
+    const updatedTicket = await hubspotClient.crm.tickets.basicApi.getById(ticketId, ["*"]);
+
+    console.log(JSON.stringify(updatedTicket, null, 2));
     return {
       status: "SUCCESS",
-      body: JSON.stringify(apiResponse),
+      body: JSON.stringify(updatedTicket),
     };
   } catch (e) {
     console.error(e.message === "HTTP request failed" ? JSON.stringify(e.response, null, 2) : e);

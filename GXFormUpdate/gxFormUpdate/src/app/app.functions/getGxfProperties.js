@@ -1,4 +1,4 @@
-const axios = require('axios');
+const axios = require("axios");
 
 exports.main = async (context = {}) => {
   // const's are set by parameters that were passed in and from our secrets
@@ -7,18 +7,14 @@ exports.main = async (context = {}) => {
 
   try {
     // Fetch associated objects and assign to a const (before: fetchAssociatedShipments)
-    const { data } = await fetchAssociatedObject(
-      query,
-      PRIVATE_APP_TOKEN,
-      hs_object_id
-    );
+    const { data } = await fetchAssociatedObject(query, PRIVATE_APP_TOKEN, hs_object_id);
 
     // Send the response data
-    console.log('Response data:', data); // Agrega este console.log para ver la respuesta
-    return(data);
+    console.log("Response data:", data); // Agrega este console.log para ver la respuesta
+    return data;
   } catch (e) {
-    console.error('Error fetching data:', e); // Mejora la gestión de errores
-    return(e);
+    console.error("Error fetching data:", e); // Mejora la gestión de errores
+    return e;
   }
 };
 
@@ -26,22 +22,18 @@ exports.main = async (context = {}) => {
 const fetchAssociatedObject = (query, token, hs_object_id) => {
   // Set our body for the axios call
   const body = {
-    operationName: 'objectData', //before: shipmentData
+    operationName: "objectData", //before: shipmentData
     query,
-    variables: { hs_object_id }
+    variables: { hs_object_id },
   };
 
   // return the axios post
-  return axios.post(
-    'https://api.hubapi.com/collector/graphql',
-    JSON.stringify(body),
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  return axios.post("https://api.hubapi.com/collector/graphql", JSON.stringify(body), {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
 };
 
 // GraphQL query to fetch object associations and nested other associations from HubSpot
@@ -65,6 +57,7 @@ query objectData($hs_object_id: String!) {
             gx_form___reservation_id
             gx_form_access_date_time_requested
             gx_form_whatsapp_comms
+            gx_form_submission_date
             email
             firstname
             lastname
@@ -75,4 +68,4 @@ query objectData($hs_object_id: String!) {
     }
   }
 }
-`
+`;
