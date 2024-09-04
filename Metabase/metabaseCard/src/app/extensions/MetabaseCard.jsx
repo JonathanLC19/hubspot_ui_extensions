@@ -1,144 +1,239 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from "react";
 import {
-  LoadingSpinner,
-  Text,
-  Table,
-  TableHead,
-  TableRow,
-  TableHeader,
-  TableBody,
-  TableCell,
-  Heading,
   hubspot,
+  LoadingSpinner,
+  Alert,
+  Table,
+  TableRow,
+  TableCell,
+  Text,
+  Button,
+  TableBody,
+  Heading,
   Flex,
-  Box
-} from '@hubspot/ui-extensions';
-import { CrmActionButton } from '@hubspot/ui-extensions/crm';
+  Divider,
+  DescriptionList,
+  DescriptionListItem,
+} from "@hubspot/ui-extensions";
+import { CrmActionButton } from "@hubspot/ui-extensions/crm";
+import TableRowComponent from "./components/TableRowComponent";
 
-hubspot.extend(({ runServerlessFunction, actions }) => (
-  <Extension 
-    runServerless={runServerlessFunction} 
-    fetchProperties={actions.fetchCrmObjectProperties} 
+hubspot.extend(({ actions, runServerlessFunction }) => (
+  <Extension
+    actions={actions}
+    runServerless={runServerlessFunction}
+    fetchProperties={actions.fetchCrmObjectProperties}
   />
 ));
 
-const Extension = ({ runServerless, fetchProperties }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+const Extension = ({ actions, runServerless, fetchProperties }) => {
+  const { onCrmPropertiesUpdate, refreshObjectProperties } = actions;
+
   const [metabaseData, setMetabaseData] = useState(null);
-  const [backofficeId, setBackofficeId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [properties, setProperties] = useState({});
+  const [alert, setAlert] = useState(null);
+
+  const propertiesToFetch = [
+    "hs_object_id",
+    "backoffice_id",
+    "check_in_date",
+    "check_out_date",
+    "guest_reservation_id",
+    "associated_contact_email",
+    "apartment_booked___list",
+    // Add other properties you need to fetch
+  ];
 
   useEffect(() => {
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        console.log("Fetching properties...");
-        const properties = await fetchProperties(['backoffice_id']);
-        console.log("Fetched properties:", properties);
-        const backofficeId = properties.backoffice_id;
-        setBackofficeId(backofficeId);
-        console.log("Fetched backoffice_id:", backofficeId);
+    let isMounted = true;
 
-        if (!backofficeId) {
-          throw new Error("Backoffice ID is missing. Please ensure the deal has a valid Backoffice ID.");
-        }
-
-        console.log("Running serverless function...");
-        const result = await runServerless({ 
-          name: 'getMetabaseData', 
-          parameters: { 
-            backoffice_id: backofficeId 
-          } 
-        });
-        console.log("Serverless function result:", JSON.stringify(result, null, 2));
-        
-        if (result.status === 'SUCCESS' && result.response && result.response.metabaseData) {
-          console.log("Setting metabaseData:", JSON.stringify(result.response.metabaseData, null, 2));
-          setMetabaseData(result.response.metabaseData);
-        } else {
-          throw new Error(result.response?.error || "Failed to fetch Metabase data");
-        }
-      } catch (err) {
-        console.error("Error in fetchData:", err);
-        setError(err.message);
-      } finally {
-        setIsLoading(false);
+    fetchProperties(propertiesToFetch).then((fetchedProperties) => {
+      if (isMounted) {
+        setProperties(fetchedProperties);
+        fetchMetabaseData(fetchedProperties.backoffice_id);
       }
+    });
+
+    return () => {
+      isMounted = false;
     };
+  }, []);
+  console.log("Properties: ", properties);
 
-    fetchData();
-  }, [fetchProperties, runServerless]);
+  onCrmPropertiesUpdate(propertiesToFetch, (updatedProperties) => {
+    setProperties(updatedProperties);
+  });
 
-  console.log("Component re-rendered. State:", { isLoading, error, backofficeId, metabaseData });
+  const fetchMetabaseData = async (backofficeId) => {
+    if (!backofficeId) {
+      console.error("backoffice_id is missing");
+      setAlert({ type: "error", message: "Failed to fetch Metabase data: Missing backoffice_id" });
+      setLoading(false);
+      return;
+    }
 
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
+    try {
+      const resp = await runServerless({
+        name: "getMetabaseData",
+        parameters: { backoffice_id: backofficeId },
+      });
 
-  if (error) {
-    return <Text>Error: {error}</Text>;
-  }
+      if (resp.status === "SUCCESS" && resp.response) {
+        let data;
+        if (typeof resp.response === "string") {
+          try {
+            data = JSON.parse(resp.response);
+          } catch (parseError) {
+            console.error("Error parsing response:", parseError);
+            setAlert({ type: "error", message: "Failed to parse Metabase data" });
+            setLoading(false);
+            return;
+          }
+        } else {
+          data = resp.response;
+        }
 
-  if (!metabaseData) {
-    return <Text>No Metabase data available.</Text>;
-  }
+        if (data && data.metabaseData) {
+          setMetabaseData(data.metabaseData);
+          console.log("Metabase Data: ", data.metabaseData);
+        } else {
+          console.warn("No metabaseData found in the response");
+          setAlert({ type: "warning", message: "No Metabase data found in the response" });
+        }
+      } else {
+        console.warn("No data returned from fetchMetabaseData");
+        setAlert({ type: "warning", message: "No Metabase data found" });
+      }
+    } catch (error) {
+      console.error("Error fetching Metabase data:", error);
+      setAlert({ type: "error", message: `Failed to fetch Metabase data: ${error.message}` });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Helper function to get value from metabaseData
-  const getValue = (key) => {
-    const index = metabaseData.columnNames.indexOf(key);
-    return index !== -1 ? (metabaseData.data[0][index] !== null && metabaseData.data[0][index] !== undefined ? metabaseData.data[0][index].toString() : 'N/A') : 'N/A';
+  const updateDealProp = useCallback(
+    async (prop_name, prop_value) => {
+      try {
+        await runServerless({
+          name: "updateDealProps",
+          parameters: {
+            prop_name,
+            prop_value,
+            dealId: properties.hs_object_id,
+            backoffice_id: properties.backoffice_id,
+          },
+        });
+        await refreshObjectProperties();
+        setAlert({ type: "success", message: "Property updated successfully" });
+      } catch (error) {
+        console.error("Error updating deal property:", error);
+        setAlert({ type: "error", message: "Failed to update property" });
+      }
+      setTimeout(() => setAlert(null), 3000);
+    },
+    [properties.hs_object_id, properties.backoffice_id, refreshObjectProperties, runServerless]
+  );
+
+  const getMetabaseValue = (columnName) => {
+    if (!metabaseData || !metabaseData.columnNames || !metabaseData.data) return "N/A";
+    const index = metabaseData.columnNames.indexOf(columnName);
+    return index !== -1 ? metabaseData.data[0][index] : "N/A";
   };
 
   return (
     <>
-    <Heading>Booking Data</Heading>
-    <Flex direction={"row"} justify={'between'} wrap={'wrap'} gap={'medium'}>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Check-in Date</Text>
-        <Text>{getValue('check_in')}</Text>
-      </Box>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Check-out Date</Text>
-        <Text>{getValue('check_out')}</Text>
-      </Box>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Apartment</Text>
-        <Text>{getValue('codename')}</Text>
-      </Box>
-    </Flex>
-    <Flex direction={"row"} justify={'between'} wrap={'wrap'} gap={'large'}>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Email</Text>
-        <Text>{getValue('email')}</Text>
-      </Box>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Name</Text>
-        <Text>{getValue('name')}</Text>
-      </Box>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Last Name</Text>
-        <Text>{getValue('last_name')}</Text>
-      </Box>
-    </Flex>
-    <Flex direction={"row"} justify={'between'} wrap={'wrap'} gap={'large'}>
-      <Box>
-        <Text format={{ fontWeight: 'bold'  }}>BO | Guest Phone</Text>
-        <Text>{getValue('phone')}</Text>
-      </Box>
-    </Flex>
+      {loading && (
+        <LoadingSpinner label="Data is loading" showLabel={true} size="md" layout="centered" />
+      )}
 
-      <Text>HubSpot Backoffice ID: {backofficeId}</Text>
-      <Text>Metabase ID: {metabaseData.metabaseId}</Text>
-      
-      <CrmActionButton
-        actionType="EXTERNAL_URL"
-        actionContext={{
-          href: 'https://prod.backoffice.ukio.com/bookings/?id=' + metabaseData.metabaseId,
-        }}
-        variant="primary"
-      >
-        View in Backoffice
-      </CrmActionButton>
+      {alert && (
+        <Alert title={alert.type === "success" ? "Success" : "Error"} variant={alert.type}>
+          {alert.message}
+        </Alert>
+      )}
+
+      {metabaseData && (
+        <Flex direction="column" gap="medium">
+          <Flex>
+            <DescriptionList direction={"row"}>
+              <DescriptionListItem label="HubSpot Booking ID">
+                <Text>{properties.backoffice_id || "N/A"}</Text>
+              </DescriptionListItem>
+              <DescriptionListItem label="BO Booking ID">
+                <Text>{metabaseData.metabaseId || "N/A"}</Text>
+              </DescriptionListItem>
+            </DescriptionList>
+            <DescriptionList direction={"row"}>
+              <DescriptionListItem label="HubSpot Contact Email">
+                <Text>{properties.associated_contact_email || "N/A"}</Text>
+              </DescriptionListItem>
+              <DescriptionListItem label="BO Guest Email">
+                <Text>{getMetabaseValue("email") || "N/A"}</Text>
+              </DescriptionListItem>
+            </DescriptionList>
+          </Flex>
+          <Flex direction="row">
+            {metabaseData.metabaseId && (
+              <CrmActionButton
+                actionType="EXTERNAL_URL"
+                actionContext={{
+                  href: "https://prod.backoffice.ukio.com/bookings/?id=" + metabaseData.metabaseId,
+                }}
+                variant="primary"
+              >
+                View in Backoffice
+              </CrmActionButton>
+            )}
+          </Flex>
+          <Divider />
+          <Heading size="large">Booking Details</Heading>
+          <Flex>
+            <Table bordered={false}>
+              <TableBody>
+                <TableRowComponent
+                  prop_name_1="Check-in"
+                  prop_value_1={getMetabaseValue("check_in")}
+                  prop_label="check_in_date"
+                  updateDealProp={updateDealProp}
+                />
+                {/* Add more TableRowComponents for other properties */}
+                <TableRowComponent
+                  prop_name_1="Check-out"
+                  prop_value_1={getMetabaseValue("check_out")}
+                  prop_label="check_out_date"
+                  updateDealProp={updateDealProp}
+                />
+                <TableRowComponent
+                  prop_name_1="Guest ID"
+                  prop_value_1={getMetabaseValue("code")}
+                  prop_label="guest_reservation_id"
+                  updateDealProp={updateDealProp}
+                />
+                <TableRowComponent
+                  prop_name_1="Guest Email"
+                  prop_value_1={getMetabaseValue("email")}
+                  prop_label="associated_contact_email"
+                  updateDealProp={updateDealProp}
+                />
+                <TableRowComponent
+                  prop_name_1="Apartment Name"
+                  prop_value_1={getMetabaseValue("codename")}
+                  prop_label="apartment_booked___list"
+                  updateDealProp={updateDealProp}
+                />
+                <TableRowComponent
+                  prop_name_1="Booking Status"
+                  prop_value_1={getMetabaseValue("state")}
+                  prop_label="sales_priority"
+                  updateDealProp={updateDealProp}
+                />
+              </TableBody>
+            </Table>
+          </Flex>
+        </Flex>
+      )}
     </>
   );
 };

@@ -1,8 +1,8 @@
-const dotenv = require('dotenv');
-const { Client } = require('@hubspot/api-client');
-const axios = require('axios');
+const dotenv = require("dotenv");
+const { Client } = require("@hubspot/api-client");
+const axios = require("axios");
 
-dotenv.config({ path: './src/app/app.functions/.env.metabaseCard' });
+dotenv.config({ path: "./src/app/app.functions/.env.metabaseCard" });
 
 exports.main = async (context = {}) => {
   console.log("Function started at:", new Date().toISOString());
@@ -16,15 +16,15 @@ exports.main = async (context = {}) => {
     PRIVATE_APP_ACCESS_TOKEN: PRIVATE_APP_ACCESS_TOKEN ? "Set" : "Not set",
     METABASE_URL: METABASE_URL ? "Set" : "Not set",
     METABASE_USER: METABASE_USER ? "Set" : "Not set",
-    METABASE_PASSWORD: METABASE_PASSWORD ? "Set" : "Not set"
+    METABASE_PASSWORD: METABASE_PASSWORD ? "Set" : "Not set",
   });
 
   const { backoffice_id } = context.parameters;
   console.log(`Looking up deal by backoffice_id: [${backoffice_id}]`);
 
   if (!backoffice_id) {
-    console.error('backoffice_id is missing');
-    return { error: 'backoffice_id is missing' };
+    console.error("backoffice_id is missing");
+    return { error: "backoffice_id is missing" };
   }
 
   try {
@@ -37,11 +37,11 @@ exports.main = async (context = {}) => {
     console.log("Metabase authentication completed at:", new Date().toISOString());
 
     const token = authResponse.data.id;
-    const headers = { 'X-Metabase-Session': token };
+    const headers = { "X-Metabase-Session": token };
 
     // Use the correct card ID
     const cardId = 1876;
-    
+
     // First, fetch the card definition
     console.log(`Fetching Metabase card ${cardId} definition...`);
     const cardResponse = await axios.get(`${METABASE_URL}/api/card/${cardId}`, { headers });
@@ -49,24 +49,28 @@ exports.main = async (context = {}) => {
 
     // Now, execute the query
     console.log(`Executing query for Metabase card ${cardId}...`);
-    const queryResponse = await axios.post(`${METABASE_URL}/api/card/${cardId}/query`, {}, { headers });
+    const queryResponse = await axios.post(
+      `${METABASE_URL}/api/card/${cardId}/query`,
+      {},
+      { headers }
+    );
     console.log("Query results received at:", new Date().toISOString());
 
     const res = queryResponse.data;
-    
+
     // Check if res has the expected structure
     if (!res || !Array.isArray(res.data.rows) || !Array.isArray(res.data.cols)) {
       throw new Error("Unexpected Metabase query result structure");
     }
 
     const rows = res.data.rows;
-    const cols = res.data.cols.map(col => col.name);
+    const cols = res.data.cols.map((col) => col.name);
 
     console.log("Columns:", cols);
 
     // Find the index of the "id" column
-    const idColumnIndex = cols.findIndex(col => col.toLowerCase() === "id");
-    
+    const idColumnIndex = cols.findIndex((col) => col.toLowerCase() === "id");
+
     if (idColumnIndex === -1) {
       console.error("No 'id' column found. Available columns:", cols);
       throw new Error("No suitable ID column found in Metabase data");
@@ -76,10 +80,13 @@ exports.main = async (context = {}) => {
     console.log("Searching for backoffice_id:", backoffice_id);
 
     // Log all IDs in the data
-    console.log("All IDs in Metabase data:", rows.map(row => row[idColumnIndex]));
+    console.log(
+      "All IDs in Metabase data:",
+      rows.map((row) => row[idColumnIndex])
+    );
 
     // Find the row with matching backoffice_id
-    const matchingRow = rows.find(row => {
+    const matchingRow = rows.find((row) => {
       const idValue = row[idColumnIndex];
       console.log("Comparing:", idValue, "with", backoffice_id);
       return idValue && idValue.toString() === backoffice_id;
@@ -90,7 +97,7 @@ exports.main = async (context = {}) => {
         hubspotBackofficeId: backoffice_id,
         metabaseId: matchingRow[idColumnIndex],
         columnNames: cols,
-        data: [matchingRow]
+        data: [matchingRow],
       };
       console.log("Returning result:", JSON.stringify(result, null, 2));
       return { metabaseData: result };

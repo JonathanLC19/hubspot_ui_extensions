@@ -1,16 +1,5 @@
 import React from "react";
-import {
-  Text,
-  DescriptionList,
-  DescriptionListItem,
-  Button,
-  Flex,
-  Divider,
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@hubspot/ui-extensions";
+import { Text, Button, Table, TableBody, TableCell, TableRow } from "@hubspot/ui-extensions";
 
 const TableRowComponent = ({
   prop_name_1,

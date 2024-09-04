@@ -2,11 +2,11 @@
   "appFunctions": {
     "getMetabaseData": {
       "file": "getMetabaseData.js",
-      "secrets": [
-        "METABASE_URL",
-        "METABASE_USER",
-        "METABASE_PASSWORD"
-      ]
+      "secrets": ["METABASE_URL", "METABASE_USER", "METABASE_PASSWORD"]
+    },
+    "updateDealProps": {
+      "file": "updateDealProps.js",
+      "secrets": []
     }
   }
 }
