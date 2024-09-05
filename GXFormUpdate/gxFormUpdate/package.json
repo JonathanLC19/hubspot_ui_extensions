@@ -3,7 +3,9 @@
   "version": "0.1.0",
   "scripts": {
     "postinstall": "cd ./src/app/extensions/ && npm install && cd ../app.functions && npm install",
-    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\""
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "dev": "hs accounts use 'UKIO|Sandbox' && hs project upload",
+    "prod": "hs accounts use 'Ukio' && hs project upload"
   },
   "author": {
     "name": "jonathan lopez",
