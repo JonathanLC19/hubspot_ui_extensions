@@ -14,10 +14,11 @@ import {
   Divider,
   DescriptionList,
   DescriptionListItem,
-  StatusTag,
+  Tag,
 } from "@hubspot/ui-extensions";
 import { CrmActionButton } from "@hubspot/ui-extensions/crm";
 import TableRowComponent from "./components/TableRowComponent";
+import BookingStatus from "./components/BookingStatus";
 
 hubspot.extend(({ actions, runServerlessFunction }) => (
   <Extension
@@ -181,11 +182,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
               </DescriptionListItem>
             </DescriptionList>
           </Flex>
-          <Flex direction="row">
-            <Text format={{ fontWeight: "bold" }}>
-              Booking Status: <StatusTag variant="warning">{getMetabaseValue("state")}</StatusTag>
-            </Text>
-          </Flex>
+          <BookingStatus prop_value_1={getMetabaseValue("state")} />
           <Flex direction="row">
             {metabaseData.metabaseId && (
               <CrmActionButton
@@ -232,12 +229,6 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
                   prop_value_1={getMetabaseValue("codename")}
                   prop_value_2={properties.apartment_booked___list}
                   prop_label="apartment_booked___list"
-                  updateDealProp={updateDealProp}
-                />
-                <TableRowComponent
-                  prop_name_1="Booking Status"
-                  prop_value_1={getMetabaseValue("state")}
-                  prop_label="sales_priority"
                   updateDealProp={updateDealProp}
                 />
               </TableBody>

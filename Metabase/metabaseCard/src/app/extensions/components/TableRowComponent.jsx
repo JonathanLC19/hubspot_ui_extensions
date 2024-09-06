@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { Text, Button, TableRow, TableCell, Alert } from "@hubspot/ui-extensions";
-import { type } from "os";
 
 const TableRowComponent = ({
   prop_name_1,
