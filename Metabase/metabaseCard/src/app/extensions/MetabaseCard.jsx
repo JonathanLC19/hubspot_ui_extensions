@@ -14,6 +14,7 @@ import {
   Divider,
   DescriptionList,
   DescriptionListItem,
+  StatusTag,
 } from "@hubspot/ui-extensions";
 import { CrmActionButton } from "@hubspot/ui-extensions/crm";
 import TableRowComponent from "./components/TableRowComponent";
@@ -40,6 +41,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
     "check_in_date",
     "check_out_date",
     "guest_reservation_id",
+    "guest___reservation_id",
     "associated_contact_email",
     "apartment_booked___list",
     // Add other properties you need to fetch
@@ -141,6 +143,11 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
     const index = metabaseData.columnNames.indexOf(columnName);
     return index !== -1 ? metabaseData.data[0][index] : "N/A";
   };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const adjustedDate = new Date(date.getTime() + 24 * 60 * 60 * 1000);
+    return adjustedDate.toISOString().split("T")[0];
+  };
 
   return (
     <>
@@ -175,6 +182,11 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
             </DescriptionList>
           </Flex>
           <Flex direction="row">
+            <Text format={{ fontWeight: "bold" }}>
+              Booking Status: <StatusTag variant="warning">{getMetabaseValue("state")}</StatusTag>
+            </Text>
+          </Flex>
+          <Flex direction="row">
             {metabaseData.metabaseId && (
               <CrmActionButton
                 actionType="EXTERNAL_URL"
@@ -195,6 +207,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
                 <TableRowComponent
                   prop_name_1="Check-in"
                   prop_value_1={getMetabaseValue("check_in")}
+                  prop_value_2={properties.check_in_date}
                   prop_label="check_in_date"
                   updateDealProp={updateDealProp}
                 />
@@ -202,24 +215,22 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
                 <TableRowComponent
                   prop_name_1="Check-out"
                   prop_value_1={getMetabaseValue("check_out")}
+                  prop_value_2={properties.check_out_date}
                   prop_label="check_out_date"
                   updateDealProp={updateDealProp}
                 />
                 <TableRowComponent
                   prop_name_1="Guest ID"
                   prop_value_1={getMetabaseValue("code")}
-                  prop_label="guest_reservation_id"
-                  updateDealProp={updateDealProp}
-                />
-                <TableRowComponent
-                  prop_name_1="Guest Email"
-                  prop_value_1={getMetabaseValue("email")}
-                  prop_label="associated_contact_email"
+                  // prop_value_2={properties.guest___reservation_id}
+                  prop_value_2={properties.guest_reservation_id}
+                  prop_label="guest___reservation_id"
                   updateDealProp={updateDealProp}
                 />
                 <TableRowComponent
                   prop_name_1="Apartment Name"
                   prop_value_1={getMetabaseValue("codename")}
+                  prop_value_2={properties.apartment_booked___list}
                   prop_label="apartment_booked___list"
                   updateDealProp={updateDealProp}
                 />

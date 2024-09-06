@@ -15,6 +15,7 @@ exports.main = async (context = {}) => {
     "check_out_date",
     "backoffice_id",
     "guest_reservation_id",
+    "guest___reservation_id",
     "associated_contact_email",
     "apartment_booked___list"
   );
