@@ -234,7 +234,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
                 />
                 <TableRowComponent
                   prop_name_1="Pets"
-                  prop_value_1={getMetabaseValue("pets")}
+                  prop_value_1={getMetabaseValue("pets") ? "Yes" : "No"}
                   prop_value_2={properties.deal____pet_friendly__apt__required}
                   prop_label="deal____pet_friendly__apt__required"
                   updateDealProp={updateDealProp}
