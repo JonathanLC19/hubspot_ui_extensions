@@ -41,10 +41,11 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
     "backoffice_id",
     "check_in_date",
     "check_out_date",
-    "guest_reservation_id",
+    // "guest_reservation_id",
     "guest___reservation_id",
     "associated_contact_email",
     "apartment_booked___list",
+    "deal____pet_friendly__apt__required",
     // Add other properties you need to fetch
   ];
 
@@ -219,8 +220,8 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
                 <TableRowComponent
                   prop_name_1="Guest ID"
                   prop_value_1={getMetabaseValue("code")}
-                  // prop_value_2={properties.guest___reservation_id}
-                  prop_value_2={properties.guest_reservation_id}
+                  prop_value_2={properties.guest___reservation_id}
+                  // prop_value_2={properties.guest_reservation_id}
                   prop_label="guest___reservation_id"
                   updateDealProp={updateDealProp}
                 />
@@ -229,6 +230,13 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
                   prop_value_1={getMetabaseValue("codename")}
                   prop_value_2={properties.apartment_booked___list}
                   prop_label="apartment_booked___list"
+                  updateDealProp={updateDealProp}
+                />
+                <TableRowComponent
+                  prop_name_1="Pets"
+                  prop_value_1={getMetabaseValue("pets")}
+                  prop_value_2={properties.deal____pet_friendly__apt__required}
+                  prop_label="deal____pet_friendly__apt__required"
                   updateDealProp={updateDealProp}
                 />
               </TableBody>

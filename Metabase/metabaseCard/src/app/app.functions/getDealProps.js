@@ -14,10 +14,11 @@ exports.main = async (context = {}) => {
     "check_in_date",
     "check_out_date",
     "backoffice_id",
-    "guest_reservation_id",
+    // "guest_reservation_id",
     "guest___reservation_id",
     "associated_contact_email",
-    "apartment_booked___list"
+    "apartment_booked___list",
+    "deal____pet_friendly__apt__required"
   );
   return apiResponse;
 };
