@@ -12,7 +12,14 @@ exports.main = async (context = {}) => {
   const METABASE_USER = process.env.METABASE_USER;
   const METABASE_PASSWORD = process.env.METABASE_PASSWORD;
 
-  const { backoffice_id, card_id } = context.parameters; // Get card_id from parameters
+  console.log("Environment variables:", {
+    PRIVATE_APP_ACCESS_TOKEN: PRIVATE_APP_ACCESS_TOKEN ? "Set" : "Not set",
+    METABASE_URL: METABASE_URL ? "Set" : "Not set",
+    METABASE_USER: METABASE_USER ? "Set" : "Not set",
+    METABASE_PASSWORD: METABASE_PASSWORD ? "Set" : "Not set",
+  });
+
+  const { backoffice_id } = context.parameters;
   console.log(`Looking up deal by backoffice_id: [${backoffice_id}]`);
 
   if (!backoffice_id) {
@@ -32,15 +39,18 @@ exports.main = async (context = {}) => {
     const token = authResponse.data.id;
     const headers = { "X-Metabase-Session": token };
 
-    // Use the dynamic card ID
-    console.log(`Fetching Metabase card ${card_id} definition...`); // Use card_id
-    const cardResponse = await axios.get(`${METABASE_URL}/api/card/${card_id}`, { headers });
+    // Use the correct card ID
+    const cardId = 1876;
+
+    // First, fetch the card definition
+    console.log(`Fetching Metabase card ${cardId} definition...`);
+    const cardResponse = await axios.get(`${METABASE_URL}/api/card/${cardId}`, { headers });
     console.log("Card definition received at:", new Date().toISOString());
 
     // Now, execute the query
-    console.log(`Executing query for Metabase card ${card_id}...`); // Use card_id
+    console.log(`Executing query for Metabase card ${cardId}...`);
     const queryResponse = await axios.post(
-      `${METABASE_URL}/api/card/${card_id}/query`,
+      `${METABASE_URL}/api/card/${cardId}/query`,
       {},
       { headers }
     );

@@ -1,0 +1,16 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "Metabase Apartment Gaps data",
+    "uid": "apartment-gaps-card",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "ApartmentGaps.jsx"
+    },
+    "objectTypes": [
+      {
+        "name": "deals"
+      }
+    ]
+  }
+}

@@ -35,6 +35,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
   const [loading, setLoading] = useState(true);
   const [properties, setProperties] = useState({});
   const [alert, setAlert] = useState(null);
+  const [cardId, setCardId] = useState(1876); // Add state for cardId
 
   const propertiesToFetch = [
     "hs_object_id",
@@ -80,7 +81,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
     try {
       const resp = await runServerless({
         name: "getMetabaseData",
-        parameters: { backoffice_id: backofficeId },
+        parameters: { backoffice_id: backofficeId, card_id: cardId }, // Pass cardId as a parameter
       });
 
       if (resp.status === "SUCCESS" && resp.response) {

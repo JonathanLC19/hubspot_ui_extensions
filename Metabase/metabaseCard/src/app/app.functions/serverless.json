@@ -7,6 +7,10 @@
     "updateDealProps": {
       "file": "updateDealProps.js",
       "secrets": []
+    },
+    "getApartmentGaps": {
+      "file": "getApartmentGaps.js",
+      "secrets": []
     }
   }
 }
