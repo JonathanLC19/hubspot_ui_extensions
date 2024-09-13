@@ -19,14 +19,6 @@ exports.main = async (context = {}) => {
     METABASE_PASSWORD: METABASE_PASSWORD ? "Set" : "Not set",
   });
 
-  const { backoffice_id } = context.parameters;
-  console.log(`Looking up deal by backoffice_id: [${backoffice_id}]`);
-
-  if (!backoffice_id) {
-    console.error("backoffice_id is missing");
-    return { error: "backoffice_id is missing" };
-  }
-
   try {
     // Metabase authentication
     console.log("Authenticating with Metabase...");
@@ -40,27 +32,27 @@ exports.main = async (context = {}) => {
     const headers = { "X-Metabase-Session": token };
 
     // Use the correct card ID
-    const cardId = 1876;
+    const cardId = 5323;
 
     // First, fetch the card definition
-    console.log(`Fetching Metabase card ${cardId} definition...`);
+    console.log(`Fetching Gaps card ${cardId} definition...`);
     const cardResponse = await axios.get(`${METABASE_URL}/api/card/${cardId}`, { headers });
     console.log("Card definition received at:", new Date().toISOString());
 
     // Now, execute the query
-    console.log(`Executing query for Metabase card ${cardId}...`);
+    console.log(`Executing query for Gaps card ${cardId}...`);
     const queryResponse = await axios.post(
       `${METABASE_URL}/api/card/${cardId}/query`,
       {},
       { headers }
     );
-    console.log("Query results received at:", new Date().toISOString());
+    console.log("Gapos query results received at:", new Date().toISOString());
 
     const res = queryResponse.data;
 
     // Check if res has the expected structure
     if (!res || !Array.isArray(res.data.rows) || !Array.isArray(res.data.cols)) {
-      throw new Error("Unexpected Metabase query result structure");
+      throw new Error("Unexpected Gaps query result structure");
     }
 
     const rows = res.data.rows;
@@ -68,48 +60,17 @@ exports.main = async (context = {}) => {
 
     console.log("Columns:", cols);
 
-    // Find the index of the "id" column
-    const idColumnIndex = cols.findIndex((col) => col.toLowerCase() === "id");
-
-    if (idColumnIndex === -1) {
-      console.error("No 'id' column found. Available columns:", cols);
-      throw new Error("No suitable ID column found in Metabase data");
-    }
-
-    console.log("Using column for ID:", cols[idColumnIndex]);
-    console.log("Searching for backoffice_id:", backoffice_id);
-
-    // Log all IDs in the data
-    console.log(
-      "All IDs in Metabase data:",
-      rows.map((row) => row[idColumnIndex])
-    );
-
-    // Find the row with matching backoffice_id
-    const matchingRow = rows.find((row) => {
-      const idValue = row[idColumnIndex];
-      console.log("Comparing:", idValue, "with", backoffice_id);
-      return idValue && idValue.toString() === backoffice_id;
-    });
-
-    if (matchingRow) {
-      const result = {
-        hubspotBackofficeId: backoffice_id,
-        metabaseId: matchingRow[idColumnIndex],
-        columnNames: cols,
-        data: [matchingRow],
-      };
-      console.log("Returning result:", JSON.stringify(result, null, 2));
-      return { metabaseData: result };
-    } else {
-      console.error("No matching row found for backoffice_id:", backoffice_id);
-      console.log("Sample data (first 5 rows):", JSON.stringify(rows.slice(0, 5), null, 2));
-      return { error: "No matching ID found in Metabase data" };
-    }
+    // Return all Metabase card data
+    const result = {
+      columnNames: cols,
+      data: rows,
+    };
+    console.log("Returning all Gaps card data:", JSON.stringify(result, null, 2));
+    return { metabaseData: result };
   } catch (e) {
-    console.error("Error in getMetabaseData:", e.message);
+    console.error("Error in getApartmentGaps:", e.message);
     console.error("Error occurred at:", new Date().toISOString());
     console.error("Full error object:", JSON.stringify(e, Object.getOwnPropertyNames(e)));
-    return { error: `Error processing Metabase data: ${e.message}` };
+    return { error: `Error processing Gaps data: ${e.message}` };
   }
 };

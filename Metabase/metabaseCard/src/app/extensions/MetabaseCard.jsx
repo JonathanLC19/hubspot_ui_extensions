@@ -60,15 +60,16 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
       }
     });
 
+    // Set up the onCrmPropertiesUpdate listener only once
+    onCrmPropertiesUpdate(propertiesToFetch, (updatedProperties) => {
+      setProperties(updatedProperties);
+    });
+
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, []); // Empty dependency array to run only on mount
   console.log("Properties: ", properties);
-
-  onCrmPropertiesUpdate(propertiesToFetch, (updatedProperties) => {
-    setProperties(updatedProperties);
-  });
 
   const fetchMetabaseData = async (backofficeId) => {
     if (!backofficeId) {
