@@ -1,0 +1,21 @@
+{
+  "name": "Create Work Order Card",
+  "description": "Card to create Work Orders from a ticket.",
+  "uid": "get_started_app",
+  "scopes": ["crm.objects.contacts.read", 
+              "crm.objects.contacts.write", 
+              "tickets"],
+  "public": false,
+  "extensions": {
+    "crm": {
+      "cards": [
+        {
+          "file": "extensions/create_wo.json"
+        }
+      ]
+    }
+  },
+  "webhooks": {
+    "file": "./webhooks/webhooks.json"
+  }
+}

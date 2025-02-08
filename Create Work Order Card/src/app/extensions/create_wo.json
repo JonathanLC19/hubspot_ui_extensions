@@ -1,0 +1,12 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "Create Work Order Card",
+    "uid": "create_wo_card",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "createWO.jsx"
+    },
+    "objectTypes": [{ "name": "tickets" }]
+  }
+}
