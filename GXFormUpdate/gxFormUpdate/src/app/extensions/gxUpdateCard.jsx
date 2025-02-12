@@ -93,7 +93,7 @@ const Extension = ({ actions, runServerless, fetchProperties }) => {
         parameters: { prop_name, prop_value, ticketId: properties.hs_object_id },
       });
       await refreshObjectProperties(); // Ensure this is awaited
-      setAlert({ type: "success", message: "Property updated successfully" });
+      setAlert({ type: "error", message: "Property updated successfully" });
     } catch (error) {
       console.error("Error updating ticket property:", error);
       setAlert({ type: "error", message: "Failed to update property" });

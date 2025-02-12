@@ -1,7 +1,15 @@
 {
   "appFunctions": {
-    "myFunc": {
-      "file": "example-function.js",
+    "updateWODesc": {
+      "file": "updateWODesc.js",
+      "secrets": []
+    },
+    "fetchWOs": {
+      "file": "fetchWOs.js",
+      "secrets": []
+    },
+    "createWO": {
+      "file": "createWO.js",
       "secrets": []
     }
   }

@@ -1,7 +1,7 @@
 {
   "type": "crm-card",
   "data": {
-    "title": "Create Work Order Card",
+    "title": "Create Work Order",
     "uid": "create_wo_card",
     "location": "crm.record.tab",
     "module": {

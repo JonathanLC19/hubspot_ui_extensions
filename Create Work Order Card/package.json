@@ -1,6 +1,15 @@
 {
+  "scripts": {
+    "postinstall": "cd ./src/app/extensions/ && npm install && cd ../app.functions && npm install",
+    "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
+    "dev": "hs accounts use 'UKIO|Sandbox' && hs project upload",
+    "prod": "hs accounts use 'Ukio' && hs project upload"
+  },
   "dependencies": {
+    "@hubspot/cli": "^7.1.1",
     "@hubspot/ui-extensions": "^0.8.42",
+    "dotenv": "^16.4.5",
+    "fs": "^0.0.1-security",
     "is": "^3.3.0"
   }
 }

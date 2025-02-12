@@ -1,10 +1,13 @@
 {
-  "name": "Create Work Order Card",
-  "description": "Card to create Work Orders from a ticket.",
-  "uid": "get_started_app",
+  "name": "UKIO Tech Custom Cards - Tickets <> Work Orders",
+  "description": "Cards to manage Work Orders from tickets",
+  "uid": "ukio_tech_custom_cards_tick_wo",
   "scopes": ["crm.objects.contacts.read", 
-              "crm.objects.contacts.write", 
-              "tickets"],
+            "crm.objects.contacts.write", 
+            "tickets",
+            "crm.objects.custom.write",
+            "crm.schemas.custom.read",
+            "crm.objects.custom.read"],
   "public": false,
   "extensions": {
     "crm": {
