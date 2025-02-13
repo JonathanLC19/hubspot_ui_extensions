@@ -103,3 +103,4 @@ dist
 .tern-port
 
 hubspot.config.yml
+package-lock.json
