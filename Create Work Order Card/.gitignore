@@ -104,3 +104,4 @@ dist
 
 hubspot.config.yml
 package-lock.json
+.nsprc
