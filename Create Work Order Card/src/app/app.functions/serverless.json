@@ -4,8 +4,8 @@
       "file": "updateWODesc.js",
       "secrets": []
     },
-    "fetchWOs": {
-      "file": "fetchWOs.js",
+    "getIssues": {
+      "file": "getIssues.js",
       "secrets": []
     },
     "createWO": {

@@ -18,7 +18,7 @@ import {
   MultiSelect,
   Link,
 } from "@hubspot/ui-extensions";
-// import { CrmActionButton } from "@hubspot/ui-extensions/crm"
+import { CrmActionButton } from "@hubspot/ui-extensions/crm";
 
 const Extension = ({
   runServerless,
@@ -30,7 +30,7 @@ const Extension = ({
   const [woTroubleshooting, setWoTroubleshooting] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
-  const [issueType, setIssueType] = useState("");
+  // const [issueType, setIssueType] = useState("");
   const [selectedIssue, setSelectedIssue] = useState("");
   const [ticketFiles, setTicketFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -70,7 +70,7 @@ const Extension = ({
           setSubject(properties.subject);
           setContent(properties.content);
           setDescription(properties.content);
-          setIssueType(properties.issue_type);
+          // setIssueType(properties.issue_type);
           setHsObjectId(properties.hs_object_id);
           setWoTroubleshooting(properties.wo_troubleshooting);
           setTicketFiles(properties.hs_file_upload);
@@ -117,10 +117,14 @@ const Extension = ({
       });
   }, [fetchProperties]);
 
+  useEffect(() => {
+    console.log("useEffect de issues");
+  });
+
   // Handle button click to fetch WO description and update manually
   const handleCreateWorkOrder = async () => {
     try {
-      if (!woDescription || woDescription.length < 10 || !issueType) {
+      if (!woDescription || woDescription.length < 10 || !selectedIssue) {
         setIsValid(false);
         return;
       }
@@ -143,7 +147,7 @@ const Extension = ({
           work_order_requester: ticketOwner || "",
           reservation_id: reservationID || "",
           ticketId: hsObjectId,
-          work_order_name: `${bookingID} | ${apartment} | ${issueType}`,
+          work_order_name: `${bookingID} | ${apartment} | ${selectedIssue}`,
           troubleshooting_message: woTroubleshooting || "",
           uploaded_files: selectedFiles,
         },
@@ -190,7 +194,7 @@ const Extension = ({
           setIsValid(true);
           setWoDescription("");
           setWoTroubleshooting("");
-          setIssueType("");
+          // setIssueType("");
           refreshObjectProperties();
           setIsLoading(false);
           break;
@@ -375,15 +379,6 @@ const Extension = ({
                           setCity(value);
                         }}
                       />
-                      <MultiSelect
-                        value={selectedFiles}
-                        placeholder="Pick your Products"
-                        label="Files"
-                        name="selectedFiles"
-                        required={true}
-                        onChange={(value) => setSelectedFiles(value)}
-                        options={ticketFiles}
-                      />
                     </Form>
                   )}
                   <Flex
@@ -406,8 +401,7 @@ const Extension = ({
                         !reservationID ||
                         !ticketOwner ||
                         !apartment ||
-                        !city ||
-                        !selectedFiles
+                        !city
                       }
                     >
                       Create new Work Order
