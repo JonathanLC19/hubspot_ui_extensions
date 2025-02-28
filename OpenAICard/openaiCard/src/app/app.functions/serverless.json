@@ -1,7 +1,7 @@
 {
   "appFunctions": {
-    "myFunc": {
-      "file": "issue_interpreter.js",
+    "sopsAgent": {
+      "file": "sopsAgent.js",
       "secrets": ["OPENAI_API_KEY"]
     },
     "issueFinder": {
