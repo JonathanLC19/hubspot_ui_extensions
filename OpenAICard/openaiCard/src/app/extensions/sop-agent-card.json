@@ -1,0 +1,16 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "SOPs Agent Card",
+    "uid": "sop_agent_card",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "SopAgent.jsx"
+    },
+    "objectTypes": [
+      {
+        "name": "tickets"
+      }
+    ]
+  }
+}
