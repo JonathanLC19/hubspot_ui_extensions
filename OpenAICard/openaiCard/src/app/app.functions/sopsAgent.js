@@ -57,7 +57,16 @@ exports.main = async (context = {}) => {
   const { prompt } = context.parameters;
   console.log("Question: ", prompt);
   console.log("#################################################");
-  const system = `Read this text related to guest experience team S.O.P.: ${fileContent} and answer this question: ${prompt}. Always use the text content to answer the question. make sure your response doesn't exceed the maximum number of tokens.`;
+  const system = `Read this text related to guest experience team S.O.P.: ${fileContent} and answer this question: ${prompt}. 
+    Format your response in this structure:
+    1. **Problem Identification**: Brief description of the issue
+    2. **Initial Assessment**: Key points to check first
+    3. **Troubleshooting Steps**: 
+       - Step-by-step instructions
+       - Include any specific checks needed
+    4. **Escalation Protocol**: When to escalate the issue
+    
+    Always use the text content to answer the question and maintain this exact formatting. Make sure your response doesn't exceed the maximum number of tokens.`;
 
   const client = axios.create({
     headers: {

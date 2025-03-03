@@ -12,7 +12,7 @@ import {
   TableCell,
   TableRow,
   TableHeader,
-  Text
+  Text,
 } from "@hubspot/ui-extensions";
 
 // Define the Extension component
@@ -40,7 +40,9 @@ const Extension = ({
         if (properties && properties.subject && properties.content) {
           setSubject(properties.subject);
           setContent(properties.content);
-          setDescription(properties.content);
+          setDescription(
+            "Help me troubleshoot this request: " + "\n" + properties.content,
+          );
           setIssueType(properties.issue_type);
           setHsObjectId(properties.hs_object_id);
         } else {
@@ -64,7 +66,7 @@ const Extension = ({
   };
 
   // Fetch SOP information based on the question
-  const fetchIssueType = async () => {
+  const fetchSOPInformation = async () => {
     try {
       if (!description.trim()) {
         setValidationMessage("Please enter your question about SOPs.");
@@ -91,7 +93,6 @@ const Extension = ({
         setIsValid(true);
         console.log("Setting result with:", response.response);
         setResult(response.response);
-        return response.response;
       }
     } catch (err) {
       setValidationMessage("Error processing your question");
@@ -102,24 +103,9 @@ const Extension = ({
     }
   };
 
-  // Update issue type in the backend
-  const updateIssueType = (issueTypeValue) => {
-    console.log(issueTypeValue);
-    runServerless({
-      name: "updateIssueType",
-      parameters: { issueType: issueTypeValue },
-      propertiesToSend: ["hs_object_id"],
-    }).then(() => {
-      refreshObjectProperties();
-    });
-  };
-
-  // Handle button click to fetch issue type and update manually
-  const handleFetchIssueTypeClick = async () => {
-    const newIssueType = await fetchIssueType();
-    if (newIssueType) {
-      updateIssueType(newIssueType);
-    }
+  // Handle button click to get SOP answer
+  const handleGetAnswerClick = () => {
+    fetchSOPInformation();
   };
 
   return (
@@ -131,15 +117,15 @@ const Extension = ({
         gap={"small"}
       >
         <TextArea
-          label="Description"
+          label="Question"
           name="description"
-          placeholder="Enter text"
+          placeholder="Ask a question about SOPs..."
           value={description}
           onChange={handleDescriptionChange}
           error={!isValid}
           validationMessage={validationMessage}
         />
-        <Button variant="primary" onClick={handleFetchIssueTypeClick}>
+        <Button variant="primary" onClick={handleGetAnswerClick}>
           Get Answer
         </Button>
         <Divider />
@@ -153,18 +139,52 @@ const Extension = ({
         )}
         {!isValid && <Text>{validationMessage}</Text>}
         {result && (
-          <Table bordered={true} width="auto">
-            <TableHead>
-              <TableRow>
-                <TableHeader>Response</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell style={{ whiteSpace: 'pre-wrap' }}>{result}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+          <Flex direction="column" gap="small">
+            <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text>
+            <Flex
+              direction="column"
+              gap="medium"
+              style={{
+                backgroundColor: "#f5f8fa",
+                padding: "12px",
+                borderRadius: "8px",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {result.split("\n").map((line, index) => {
+                // Check for different types of lines
+                const isNumberedSection = /^\d+\.\s\*\*.*\*\*/.test(
+                  line.trim(),
+                );
+                const isBulletPoint = line.trim().startsWith("-");
+                const indentLevel = isBulletPoint ? "24px" : "0";
+
+                let formattedLine = line;
+                if (isNumberedSection) {
+                  formattedLine = line.replace(
+                    /^\d+\.\s\*\*(.*?)\*\*:?/,
+                    "$1:",
+                  );
+                }
+
+                return (
+                  <Text
+                    key={index}
+                    style={{
+                      marginLeft: indentLevel,
+                      marginTop: isNumberedSection ? "12px" : "4px",
+                    }}
+                    format={{
+                      fontWeight: isNumberedSection ? "bold" : "regular",
+                      fontSize: isNumberedSection ? "14px" : "13px",
+                    }}
+                  >
+                    {formattedLine}
+                  </Text>
+                );
+              })}
+            </Flex>
+          </Flex>
         )}
       </Flex>
     </>
