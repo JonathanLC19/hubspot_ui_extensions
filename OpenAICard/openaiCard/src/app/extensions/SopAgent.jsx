@@ -6,22 +6,27 @@ import {
   Divider,
   Flex,
   LoadingSpinner,
-  Table,
-  TableHead,
-  TableBody,
-  TableCell,
-  TableRow,
-  TableHeader,
+  //   Table,
+  //   TableHead,
+  //   TableBody,
+  //   TableCell,
+  //   TableRow,
+  //   TableHeader,
   Text,
 } from "@hubspot/ui-extensions";
 
+// Define the HubSpot UI extension entry point
+hubspot.extend(({ context, runServerlessFunction, actions }) => (
+  <Extension
+    context={context}
+    runServerless={runServerlessFunction}
+    fetchProperties={actions.fetchCrmObjectProperties}
+    refreshObjectProperties={actions.refreshObjectProperties}
+  />
+));
+
 // Define the Extension component
-const Extension = ({
-  context,
-  runServerless,
-  fetchProperties,
-  refreshObjectProperties,
-}) => {
+const Extension = ({ context, runServerless, fetchProperties }) => {
   const [description, setDescription] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
@@ -30,32 +35,69 @@ const Extension = ({
   const [content, setContent] = useState("");
   const [issueType, setIssueType] = useState("");
   const [loading, setLoading] = useState(false);
-  const [hsObjectId, setHsObjectId] = useState("");
+  const [currentObjectId, setCurrentObjectId] = useState(null);
+
+  // This will hold our "Contacts" data from the GraphQL query in fetchAssociatedContacts.js
+  const [contacts, setContacts] = useState(null);
 
   // Fetch initial properties from HubSpot
+  // Combine both useEffects into one
+  // Remove the second useEffect entirely
+
   useEffect(() => {
-    fetchProperties(["subject", "content", "issue_type", "hs_object_id"])
-      .then((properties) => {
-        console.log("Properties fetched:", properties); // Log all fetched properties for debugging
-        if (properties && properties.subject && properties.content) {
-          setSubject(properties.subject);
-          setContent(properties.content);
-          setDescription(
-            "Help me troubleshoot this request: " + "\n" + properties.content,
-          );
-          setIssueType(properties.issue_type);
-          setHsObjectId(properties.hs_object_id);
-        } else {
-          console.error(
-            "Error: subject or content not found in properties:",
-            properties,
-          );
+    const fetchData = async () => {
+      try {
+        const properties = await fetchProperties([
+          "subject",
+          "content",
+          "issue_type",
+          "hs_object_id",
+        ]);
+
+        setSubject(properties.subject);
+        setContent(properties.content);
+        setDescription(
+          "Help me troubleshoot this request: " + "\n" + properties.content,
+        );
+        setIssueType(properties.issue_type);
+        setCurrentObjectId(properties.hs_object_id);
+
+        if (properties.hs_object_id) {
+          console.log("Fetching contacts for ticket:", properties.hs_object_id);
+
+          const contactsResponse = await runServerless({
+            name: "fetchAssociatedContacts",
+            parameters: {
+              hs_object_id: properties.hs_object_id, // Changed back to hs_object_id to match serverless function
+            },
+          });
+
+          console.log("Contacts response:", contactsResponse);
+
+          if (
+            contactsResponse.status === "SUCCESS" &&
+            contactsResponse.response?.data?.CRM?.ticket?.associations
+              ?.contact_collection__ticket_to_contact?.items
+          ) {
+            const contactItems =
+              contactsResponse.response.data.CRM.ticket.associations
+                .contact_collection__ticket_to_contact.items;
+            setContacts(contactItems);
+            console.log("Contacts set:", contactItems);
+          } else {
+            setContacts([]);
+          }
         }
-      })
-      .catch((error) => {
-        console.error("Error fetching properties:", error);
-      });
-  }, [fetchProperties]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setContacts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [fetchProperties, runServerless]);
 
   // Fetch issue type based on the description
   // Handle description change and validate
@@ -190,13 +232,3 @@ const Extension = ({
     </>
   );
 };
-
-// Define the HubSpot UI extension entry point
-hubspot.extend(({ context, runServerlessFunction, actions }) => (
-  <Extension
-    context={context}
-    runServerless={runServerlessFunction}
-    fetchProperties={actions.fetchCrmObjectProperties}
-    refreshObjectProperties={actions.refreshObjectProperties}
-  />
-));

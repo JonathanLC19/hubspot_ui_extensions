@@ -2,7 +2,14 @@
   "name": "UKIO Tech Custom Cards - AI Solutions",
   "description": "Ui Extensions to manage own AI Solutions in HubSpot",
   "uid": "ai_solutions_ukio",
-  "scopes": ["tickets"],
+  "scopes": [
+    "tickets",
+    "collector.graphql_schema.read",
+    "collector.graphql_query.execute",
+    "crm.objects.contacts.read",
+    "crm.objects.contacts.write",
+    "crm.schemas.contacts.read"
+  ],
   "public": false,
   "extensions": {
     "crm": {

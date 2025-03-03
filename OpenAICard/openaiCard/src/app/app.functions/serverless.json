@@ -4,6 +4,10 @@
       "file": "sopsAgent.js",
       "secrets": ["OPENAI_API_KEY"]
     },
+    "fetchAssociatedContacts": {
+      "file": "fetchAssociatedContacts.js",
+      "secrets": ["OPENAI_API_KEY"]
+    },
     "issueFinder": {
       "file": "issueFinder.js",
       "secrets": ["OPENAI_API_KEY"]
