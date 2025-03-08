@@ -54,6 +54,23 @@ query contactsSearch($hs_object_id: String!) {
       hs_object_id
       subject
       associations {
+        engagement_collection__ticket_to_engagement {
+          items{
+            hs_conversation_session_source
+            hs_conversation_session_visitor_start_time
+            hs_conversation_session_visitor_wait_time
+            hs_conversation_session_visitor_end_time
+            hs_conversation_session_thread_id
+            hs_email_from_email
+            hs_email_to_email
+            hs_email_subject
+            hs_engagement_source
+            hs_engagement_type
+            hs_object_source
+            hs_createdate
+            hs_body_preview
+          }
+        }
         contact_collection__ticket_to_contact {
           items {
             firstname
@@ -81,6 +98,8 @@ query contactsSearch($hs_object_id: String!) {
                   hs_engagement_source
                   hs_engagement_type
                   hs_object_source
+                  hs_createdate
+                  hs_body_preview
                 }
               }
             }

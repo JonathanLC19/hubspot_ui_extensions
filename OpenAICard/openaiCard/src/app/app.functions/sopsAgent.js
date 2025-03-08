@@ -5,8 +5,11 @@ const mammoth = require("mammoth");
 const fs = require("fs");
 const path = require("path");
 const exp = require("constants");
+const hubspot = require("@hubspot/api-client");
+
 dotenv.config();
 
+// DOCX READER
 /**
  * Reads a .docx file and extracts its content as HTML or plain text
  * @param {string} filePath - Path to the .docx file
@@ -49,7 +52,44 @@ if (!fs.existsSync(fullPath)) {
 //     console.error("Failed to read document:", error);
 //   });
 
+// Function to fetch associated contacts with their properties
+async function getAssociatedContacts(hs_object_id) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
+
+  // Fetch assisocisated deals ids
+  const objectData = await hubSpotClient.crm.tickets.basicApi.getById(
+    hs_object_id,
+    null,
+    null,
+    ["deals"],
+  );
+  if (!objectData.associations) {
+    // No associated deals
+    return [];
+  }
+
+  const contactIds = objectData.associations.contacts.results.map(
+    (deal) => deal.id,
+  );
+  // Fetch more deals prooperties to calculate needed numbers
+  const contacts = await hubSpotClient.crm.contacts.batchApi.read({
+    inputs: contactIds.map((id) => ({ id })),
+  });
+  return contacts.results;
+}
+
+// OPENAI AGENT
 exports.main = async (context = {}) => {
+  // const { hs_object_id } = context.propertiesToSend;
+
+  // const contacts = await getAssociatedContacts(hs_object_id);
+  // console.log(
+  //   "Contacts in sopsAgent file: ",
+  //   JSON.stringify(contacts, null, 2),
+  // );
+
   const docResult = await readDocxFile(fullPath);
   const fileContent = docResult.content;
 
@@ -102,51 +142,3 @@ exports.main = async (context = {}) => {
     console.error(err.response ? err.response.data : err.message);
   }
 };
-
-// async function main() {
-//   try {
-//     const docResult = await readDocxFile(fullPath);
-//     const fileContent = docResult.content;
-
-//     const apiKey = process.env.OPENAI_API_KEY;
-//     const prompt = `What steps should I follow to troubleshoot an A-C malfunction issue?`;
-//     console.log("Question: ", prompt);
-//     console.log("#################################################");
-//     const system = `Read this text related to guest experience team S.O.P.: ${fileContent} and answer this question: ${prompt}. Always use the text content to answer the question. make sure your response doesn't exceed the maximum number of tokens.`;
-
-//     const client = axios.create({
-//       headers: {
-//         Authorization: `Bearer ${apiKey}`,
-//         "Content-Type": "application/json",
-//       },
-//     });
-
-//     const params = {
-//       messages: [
-//         {
-//           role: "system",
-//           content: system,
-//         },
-//         {
-//           role: "user",
-//           content: prompt,
-//         },
-//       ],
-//       model: "gpt-4o",
-//       max_tokens: 200,
-//       temperature: 0,
-//     };
-
-//     const result = await client.post(
-//       "https://api.openai.com/v1/chat/completions",
-//       params,
-//     );
-//     const message = result.data.choices[0].message.content;
-//     console.log(message);
-//     return message;
-//   } catch (err) {
-//     console.error(err.response ? err.response.data : err.message);
-//   }
-// }
-
-// main();
