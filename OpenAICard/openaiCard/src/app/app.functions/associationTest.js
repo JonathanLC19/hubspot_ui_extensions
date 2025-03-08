@@ -95,32 +95,45 @@ async function getThread(threadId) {
     const response = await axios.get(url, { headers });
     const data = response.data;
     const thread = data.results;
-    console.log("Thread: ", JSON.stringify(thread, null, 2));
-    return response.data;
+    // Filter only messages of type "MESSAGE"
+    const messageThreads = thread.filter((msg) => msg.type === "MESSAGE");
+    // console.log("Message Threads: ", JSON.stringify(messageThreads, null, 2));
+    return messageThreads;
   } catch (error) {
     console.error("Error fetching thread:", error.message);
     throw error;
   }
 }
 
-// Chain the async operations
 async function main() {
   const contactIds = await getAssociatedContacts();
-  //   if (contactIds.length > 0) {
-  //     await getAssociatedMessages(contactIds);
-  //   }
   const engmIds = await getAssociatedMessages(contactIds);
+  let messages = [];
   if (engmIds.length > 0) {
-    const messages = engmIds.map((id) => getEngagement(id));
-    await Promise.all(messages);
-    // await getEngagement(engmIds[0]);
+    const messagePromises = engmIds.map((id) => getEngagement(id));
+    messages = await Promise.all(messagePromises);
   }
-  const thread = await getThread("8250023136");
-  if (thread && thread.results) {
-    const threadText = thread.results.map((msg) => msg.text);
-    await Promise.all(threadText);
+  // console.log("Messages: ", JSON.stringify(messages, null, 2));
+  let communications = [];
+  const messagesNoThreads = messages.filter(
+    (msg) => msg.metadata && !msg.metadata.conversationsThreadId,
+  );
+  if (messagesNoThreads.length > 0) {
+    communications = messagesNoThreads;
   }
-  //   console.log(threadText);
+  console.log("Communications: ", JSON.stringify(communications, null, 2));
+  let threads = [];
+  // Filter messages that have conversationsThreadId in metadata
+  const messagesWithThreads = messages.filter(
+    (msg) => msg.metadata && msg.metadata.conversationsThreadId,
+  );
+  if (messagesWithThreads.length > 0) {
+    const threadPromises = messagesWithThreads.map((msg) =>
+      getThread(msg.metadata.conversationsThreadId),
+    );
+    threads = await Promise.all(threadPromises);
+  }
+  // console.log("Threads: ", JSON.stringify(threads, null, 2));
 }
 
 main();
