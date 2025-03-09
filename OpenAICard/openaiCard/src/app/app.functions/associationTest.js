@@ -134,20 +134,6 @@ async function main() {
     threads = await Promise.all(threadPromises);
   }
   console.log("Threads: ", JSON.stringify(threads, null, 2));
-  let threadsNormalized = [];
-  if (messagesWithThreads.length > 0) {
-    const threadsFlat = messagesWithThreads.map((thread) => ({
-      text: thread.text,
-      channel: thread.channelId,
-      createdAt: thread.createdAt,
-      direction: thread.direction,
-    }));
-    threadsNormalized = await Promise.all(threadsFlat);
-  }
-  console.log(
-    "Threads Normalized: ",
-    JSON.stringify(threadsNormalized, null, 2),
-  );
 }
 
 main();
