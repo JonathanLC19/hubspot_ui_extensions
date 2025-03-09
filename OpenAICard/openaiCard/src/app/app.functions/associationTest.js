@@ -121,7 +121,7 @@ async function main() {
   if (messagesNoThreads.length > 0) {
     communications = messagesNoThreads;
   }
-  console.log("Communications: ", JSON.stringify(communications, null, 2));
+  // console.log("Communications: ", JSON.stringify(communications, null, 2));
   let threads = [];
   // Filter messages that have conversationsThreadId in metadata
   const messagesWithThreads = messages.filter(
@@ -133,7 +133,21 @@ async function main() {
     );
     threads = await Promise.all(threadPromises);
   }
-  // console.log("Threads: ", JSON.stringify(threads, null, 2));
+  console.log("Threads: ", JSON.stringify(threads, null, 2));
+  let threadsNormalized = [];
+  if (messagesWithThreads.length > 0) {
+    const threadsFlat = messagesWithThreads.map((thread) => ({
+      text: thread.text,
+      channel: thread.channelId,
+      createdAt: thread.createdAt,
+      direction: thread.direction,
+    }));
+    threadsNormalized = await Promise.all(threadsFlat);
+  }
+  console.log(
+    "Threads Normalized: ",
+    JSON.stringify(threadsNormalized, null, 2),
+  );
 }
 
 main();
