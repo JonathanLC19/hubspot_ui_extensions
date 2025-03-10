@@ -12,11 +12,11 @@ dotenv.config();
 // Entry function of this module, it fetches associated deals and calculates the statistics
 exports.main = async (context = {}) => {
   const { hs_object_id } = context.parameters;
-  console.log("hs_object_id: ", hs_object_id);
+  // console.log("hs_object_id: ", hs_object_id);
 
   const docResult = await readDocxFile(fullPath);
   const fileContent = docResult.content;
-  console.log("SOP: ", fileContent);
+  // console.log("SOP: ", fileContent);
   // ####################################################################################################
   const contactIds = await getAssociatedContacts(hs_object_id);
   const engmIds = await getAssociatedMessages(contactIds);
@@ -96,18 +96,15 @@ exports.main = async (context = {}) => {
       .replace(/\s+/g, " ")
       .trim(),
   }));
-  // console.log(
-  //   "Normalized Threads: ",
-  //   JSON.stringify(threadsMetadata, null, 2),
-  // );
+  console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
   // Get OpenAI API key from secrets
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OpenAI API key not found in secrets");
   }
   const { prompt } = context.parameters;
-  console.log("Question: ", prompt);
-  console.log("#################################################");
+  // console.log("Question: ", prompt);
+  // console.log("#################################################");
 
   // System prompt
   const system = `Read this text related to guest experience team S.O.P.: ${fileContent} and answer this question: ${prompt}.
@@ -115,7 +112,7 @@ exports.main = async (context = {}) => {
   Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
   Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
   Format your response in this structure:
-  1. **Communications**: Brief description of the conversations with the client. If no no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to. Make sure you emphasize in previous conversations related to othe issues managed by the GX team.
+  1. **Communications**: Brief description of the conversations with the client. If no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to emphasizing and giving priority to previous conversations related to other issues managed.
   2. **Troubleshooting Steps**:
     - Step-by-step instructions
     - Include any specific checks needed
@@ -150,7 +147,7 @@ exports.main = async (context = {}) => {
       params,
     );
     const message = result.data.choices[0].message.content;
-    console.log(message);
+    // console.log(message);
     return message;
   } catch (err) {
     console.error(err.response ? err.response.data : err.message);
@@ -283,7 +280,7 @@ async function readDocxFile(filePath, extractHtml = false) {
 
 // Example usage
 const fullPath = path.join(__dirname, "GX SOPs", "A_C Malfunction.docx");
-console.log("Attempting to read:", fullPath);
+// console.log("Attempting to read:", fullPath);
 console.log("#################################################");
 if (!fs.existsSync(fullPath)) {
   console.error("File does not exist:", fullPath);
