@@ -37,13 +37,6 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
   const [loading, setLoading] = useState(false);
   const [currentObjectId, setCurrentObjectId] = useState(null);
 
-  // This will hold our "Contacts" data from the GraphQL query in fetchAssociatedContacts.js
-  const [contacts, setContacts] = useState(null);
-
-  // Fetch initial properties from HubSpot
-  // Combine both useEffects into one
-  // Remove the second useEffect entirely
-
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -61,43 +54,15 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         );
         setIssueType(properties.issue_type);
         setCurrentObjectId(properties.hs_object_id);
-
-        if (properties.hs_object_id) {
-          console.log("Fetching contacts for ticket:", properties.hs_object_id);
-
-          const contactsResponse = await runServerless({
-            name: "fetchAssociatedContacts",
-            parameters: {
-              hs_object_id: properties.hs_object_id, // Changed back to hs_object_id to match serverless function
-            },
-          });
-
-          console.log("Contacts response:", contactsResponse);
-
-          if (
-            contactsResponse.status === "SUCCESS" &&
-            contactsResponse.response?.data?.CRM?.ticket?.associations
-              ?.contact_collection__ticket_to_contact?.items
-          ) {
-            const contactItems =
-              contactsResponse.response.data.CRM.ticket.associations
-                .contact_collection__ticket_to_contact.items;
-            setContacts(contactItems);
-            console.log("Contacts set:", contactItems);
-          } else {
-            setContacts([]);
-          }
-        }
       } catch (error) {
         console.error("Error fetching data:", error);
-        setContacts([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [fetchProperties, runServerless]);
+  }, [fetchProperties]);
 
   // Fetch issue type based on the description
   // Handle description change and validate
@@ -120,6 +85,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         name: "sopsAgent",
         parameters: {
           prompt: description,
+          hs_object_id: currentObjectId,
         },
       });
 

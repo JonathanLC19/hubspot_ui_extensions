@@ -114,6 +114,8 @@ async function main() {
     messages = await Promise.all(messagePromises);
   }
   // console.log("Messages: ", JSON.stringify(messages, null, 2));
+
+  // Filter messages that don't have conversationsThreadId in metadata
   let communications = [];
   const messagesNoThreads = messages.filter(
     (msg) => msg.metadata && !msg.metadata.conversationsThreadId,
@@ -122,8 +124,43 @@ async function main() {
     communications = messagesNoThreads;
   }
   // console.log("Communications: ", JSON.stringify(communications, null, 2));
-  let threads = [];
+  const flatCommunications = communications.flat();
+  // console.log(
+  //   "Flatted Communications: ",
+  //   JSON.stringify(flatCommunications, null, 2),
+  // );
+  // Normalize the messages
+  const normalizedMessages = flatCommunications.map((msg) => ({
+    engagement: msg.engagement,
+    // type: msg.type,
+    // direction: msg.direction,
+    // createdAt: msg.createdAt,
+    // bodyPreview: msg.bodyPreview
+    //   .replace(/[^\w\s]/g, "")
+    //   .replace(/\n/g, " ")
+    //   .replace(/\s+/g, " ")
+    //   .trim(),
+  }));
+  // console.log(
+  //   "Normalized Messages: ",
+  //   JSON.stringify(normalizedMessages, null, 2),
+  // );
+  const messagesMetadata = normalizedMessages.map((msg) => ({
+    type: msg.engagement.type,
+    id: msg.engagement.id,
+    createdAt: msg.engagement.createdAt,
+    bodyPreview: msg.engagement.bodyPreview
+      ? msg.engagement.bodyPreview
+          .replace(/[^\p{L}\s]/gu, "")
+          .replace(/\n/g, " ")
+          .replace(/\s+/g, " ")
+          .trim()
+      : "",
+  }));
+  console.log("Messages Metadata: ", JSON.stringify(messagesMetadata, null, 2));
+
   // Filter messages that have conversationsThreadId in metadata
+  let threads = [];
   const messagesWithThreads = messages.filter(
     (msg) => msg.metadata && msg.metadata.conversationsThreadId,
   );
@@ -133,7 +170,24 @@ async function main() {
     );
     threads = await Promise.all(threadPromises);
   }
-  console.log("Threads: ", JSON.stringify(threads, null, 2));
+  // console.log("Threads: ", JSON.stringify(threads, null, 2));
+  const flatThreads = threads.flat();
+  // console.log("Flatted Threads: ", JSON.stringify(flatThreads, null, 2));
+  const threadsMetadata = flatThreads.map((msg) => ({
+    threadId: msg.conversationsThreadId,
+    channelId: msg.channelId,
+    direction: msg.direction,
+    createdAt: msg.createdAt,
+    text: msg.text
+      .replace(/[^\w\s]/g, "")
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  }));
+  // console.log(
+  //   "Normalized Threads: ",
+  //   JSON.stringify(threadsMetadata, null, 2),
+  // );
 }
 
 main();
