@@ -69,7 +69,7 @@ exports.main = async (context = {}) => {
           .trim()
       : "",
   }));
-  console.log("Messages Metadata: ", JSON.stringify(messagesMetadata, null, 2));
+  // console.log("Messages Metadata: ", JSON.stringify(messagesMetadata, null, 2));
 
   // Filter messages that have conversationsThreadId in metadata
   let threads = [];
@@ -96,7 +96,13 @@ exports.main = async (context = {}) => {
       .replace(/\s+/g, " ")
       .trim(),
   }));
-  console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
+  // console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
+  // ####################################################################################################
+
+  // console.log("####################  SOP FILES #############################");
+  // const filePaths = getFilePaths(directoryPath);
+  // console.log(filePaths);
+
   // Get OpenAI API key from secrets
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -107,8 +113,8 @@ exports.main = async (context = {}) => {
   // console.log("#################################################");
 
   // System prompt
-  const system = `Read this text related to guest experience team S.O.P.: ${fileContent} and answer this question: ${prompt}.
-  To find a better solution, keep in mind the communications history with the client.
+  const system = `You are a helpful guest experience agent in an accomodation company.
+  Read this text related to guest experience team S.O.P.: ${fileContent} and help me find a better solution for this case given by one of our guests: ${prompt}. It's very important to check the communications history with the client first to identify if there have been any other cases related to these issues or other ones in the past.
   Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
   Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
   Format your response in this structure:
@@ -250,7 +256,7 @@ async function getThread(threadId) {
   }
 }
 
-// ################################### GOOD CODE W/OUT ASSOCIATIONS (09/03/2025) #######################################
+// ################################### DOCX READER (SINGLE DOC) #######################################
 // DOCX READER
 /**
  * Reads a .docx file and extracts its content as HTML or plain text
@@ -286,76 +292,19 @@ if (!fs.existsSync(fullPath)) {
   console.error("File does not exist:", fullPath);
   return;
 }
-// readDocxFile(fullPath)
-//   .then((result) => {
-//     console.log("Document content:", result.content);
-//   })
-//   .catch((error) => {
-//     console.error("Failed to read document:", error);
-//   });
 
-// // OPENAI AGENT
-// exports.main = async (context = {}) => {
-//   // Debug context parameters and secrets
-//   console.log("Context parameters:", context.parameters);
-//   console.log("Context secrets available:", Object.keys(context.secrets || {}));
+// ################################### DOCX READER (FILES LIST) #######################################
+const directoryPath = path.join(__dirname, "GX SOPs");
 
-//   // Get OpenAI API key from secrets
-//   const apiKey = process.env.OPENAI_API_KEY;
-//   if (!apiKey) {
-//     throw new Error("OpenAI API key not found in secrets");
-//   }
-
-//   const docResult = await readDocxFile(fullPath);
-//   const fileContent = docResult.content;
-
-//   const { prompt } = context.parameters;
-//   console.log("Question: ", prompt);
-//   console.log("#################################################");
-
-//   // System prompt
-//   const system = `Read this text related to guest experience team S.O.P.: ${fileContent} and answer this question: ${prompt}.
-//   Format your response in this structure:
-//   1. **Problem Identification**: Brief description of the issue
-//   2. **Initial Assessment**: Key points to check first
-//   3. **Troubleshooting Steps**:
-//      - Step-by-step instructions
-//      - Include any specific checks needed
-//   4. **Escalation Protocol**: When to escalate the issue`;
-
-//   const client = axios.create({
-//     headers: {
-//       Authorization: `Bearer ${apiKey}`,
-//       "Content-Type": "application/json",
-//     },
-//   });
-
-//   const params = {
-//     messages: [
-//       {
-//         role: "system",
-//         content: system,
-//       },
-//       {
-//         role: "user",
-//         content: prompt,
-//       },
-//     ],
-//     model: "gpt-4o",
-//     max_tokens: 200,
-//     temperature: 0,
-//   };
-
-//   try {
-//     const result = await client.post(
-//       "https://api.openai.com/v1/chat/completions",
-//       params,
-//     );
-//     const message = result.data.choices[0].message.content;
-//     console.log(message);
-//     return message;
-//   } catch (err) {
-//     console.error(err.response ? err.response.data : err.message);
-//     throw err;
-//   }
-// };
+function getFilePaths(dir, fileList = []) {
+  const files = fs.readdirSync(dir);
+  files.forEach((file) => {
+    const filePath = path.join(dir, file);
+    if (fs.statSync(filePath).isDirectory()) {
+      getFilePaths(filePath, fileList);
+    } else {
+      fileList.push(filePath);
+    }
+  });
+  return fileList;
+}
