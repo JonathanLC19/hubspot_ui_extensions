@@ -7,6 +7,9 @@ const path = require("path");
 const exp = require("constants");
 const hubspot = require("@hubspot/api-client");
 
+// const { DirectoryLoader } = require("langchain/document_loaders/fs/directory");
+// const { TextLoader } = require("langchain/document_loaders/fs/text");
+
 dotenv.config();
 
 // Entry function of this module, it fetches associated deals and calculates the statistics
@@ -69,6 +72,8 @@ exports.main = async (context = {}) => {
           .trim()
       : "",
   }));
+
+  // console.log({ docs });
   // console.log("Messages Metadata: ", JSON.stringify(messagesMetadata, null, 2));
 
   // Filter messages that have conversationsThreadId in metadata
@@ -308,3 +313,11 @@ function getFilePaths(dir, fileList = []) {
   });
   return fileList;
 }
+
+// const loader = new DirectoryLoader(
+//   "OpenAICard/openaiCard/src/app/app.functions/GX SOPs/Broken Bed.docx",
+//   {
+//     ".docx": (path) => new TextLoader(path, "/text"),
+//   },
+// );
+// const docs = await loader.load();
