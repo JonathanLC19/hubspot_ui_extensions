@@ -144,3 +144,4 @@ CLAUDE.md
 OpenAICard/openaiCard/CLAUDE.md
 OpenAICard/openaiCard/src/app/app.functions/sop_documents.json
 OpenAICard/openaiCard/src/app/app.functions/docsReader.py
+OpenAICard/openaiCard/src/app/app.functions/issues.json

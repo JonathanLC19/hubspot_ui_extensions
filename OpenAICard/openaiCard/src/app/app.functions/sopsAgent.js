@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 const exp = require("constants");
 const hubspot = require("@hubspot/api-client");
+const JSONLoader = require("./sop_documents.json");
 
 // const { DirectoryLoader } = require("langchain/document_loaders/fs/directory");
 // const { TextLoader } = require("langchain/document_loaders/fs/text");
@@ -16,6 +17,9 @@ dotenv.config();
 exports.main = async (context = {}) => {
   const { hs_object_id } = context.parameters;
   // console.log("hs_object_id: ", hs_object_id);
+
+  const sopDocs = JSONLoader;
+  console.log("SOPs: ", sopDocs);
 
   const docResult = await readDocxFile(fullPath);
   const fileContent = docResult.content;
@@ -101,12 +105,8 @@ exports.main = async (context = {}) => {
       .replace(/\s+/g, " ")
       .trim(),
   }));
-  // console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
-  // ####################################################################################################
 
-  // console.log("####################  SOP FILES #############################");
-  // const filePaths = getFilePaths(directoryPath);
-  // console.log(filePaths);
+  // console.log(JSONLoader);
 
   // Get OpenAI API key from secrets
   const apiKey = process.env.OPENAI_API_KEY;
@@ -118,18 +118,33 @@ exports.main = async (context = {}) => {
   // console.log("#################################################");
 
   // System prompt
-  const system = `You are a helpful guest experience agent in an accomodation company.
-  Read this text related to guest experience team S.O.P.: ${fileContent} and help me find a better solution for this case given by one of our guests: ${prompt}. It's very important to check the communications history with the client first to identify if there have been any other cases related to these issues or other ones in the past.
-  Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
-  Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
-  Format your response in this structure:
-  1. **Communications**: Brief description of the conversations with the client. If no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to emphasizing and giving priority to previous conversations related to other issues managed.
-  2. **Troubleshooting Steps**:
-    - Step-by-step instructions
-    - Include any specific checks needed
-  
-  To give troubleshooting hints, always take guest's conversations and communications into consideration to detect if the same case or similar has happend before.`;
+  const system = `You are a helpful guest experience agent in an accommodation company.
+  To find the troubleshooting hints for this case: ${prompt}, first identify the different issues, requests, questions, feedback, etc. the case is related to and then list the specific SOP documents from these SOPs: ${JSON.stringify(sopDocs, null, 2)} that you suggest to
+  go and get the resolution hints. If you find more than one issue, request, question, etc. return the SOP refered to each one of them.
+  If some of the reasons are related to requests, look for documents related to request handling, like cleaning requests or extension requests.
+  If some of the reasons are related to issues like malfunctions, broken furniture, or other problems, look for documents related to these issues, like malfunctions, broken furniture, etc.
+  If some of the reasons are related to complaints, look for documents related to complaints, like complaints, complaints handling, etc.
+  If some of the reasons are related to feedback, look for documents related to feedback, like feedback, feedback handling, etc.
+  Return only the source name of each SOP document.
+`;
+  // const system = `You are a helpful guest experience agent in an accommodation company.
+  // Here are the Standard Operating Procedures (SOPs) for guest experience: ${JSON.stringify(sopDocs, null, 2)}
 
+  // Please help me find a solution for this guest case: ${prompt}
+
+  // It's very important to check the communications history with the client first to identify if there have been any other cases related to these issues or other ones in the past.
+
+  // Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
+  // Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
+
+  // Format your response in this structure:
+  // 1. **Sources**: List the specific SOP documents from the provided JSON that you used to find the troubleshooting hints. Reference them by their titles.
+  // 2. **Communications**: Brief description of the conversations with the client. If no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to emphasizing and giving priority to previous conversations related to other issues managed.
+  // 3. **Troubleshooting Steps**:
+  //   - Step-by-step instructions
+  //   - Include any specific checks needed
+
+  // To give troubleshooting hints, always take guest's conversations and communications into consideration to detect if the same case or similar has happened before.`;
   const client = axios.create({
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -147,8 +162,8 @@ exports.main = async (context = {}) => {
         content: prompt,
       },
     ],
-    model: "gpt-4o",
-    max_tokens: 500,
+    model: "gpt-4o-mini",
+    max_completion_tokens: 100,
     temperature: 0,
   };
 
