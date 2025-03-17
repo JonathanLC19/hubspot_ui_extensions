@@ -6,6 +6,9 @@ const fs = require("fs");
 const issuesData = require("./issues.json");
 const sopData = require("./GX SOPs/sop_documents.json"); // Import SOP documents
 
+const hubspot = require("@hubspot/api-client");
+const axios = require("axios");
+
 dotenv.config();
 
 // Function to create the issues search tool description for OpenAI

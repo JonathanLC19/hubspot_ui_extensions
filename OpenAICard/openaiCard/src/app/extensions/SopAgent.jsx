@@ -124,6 +124,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         wrap={"wrap"}
         gap={"small"}
       >
+        {/* TextArea for user to input their SOP-related questions 
         <TextArea
           label="Question"
           name="description"
@@ -132,16 +133,16 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
           onChange={handleDescriptionChange}
           error={!isValid}
           validationMessage={validationMessage}
-        />
-        <Button variant="primary" onClick={handleGetAnswerClick}>
-          Get Answer
+        /> */}
+        <Button size="lg" variant="primary" onClick={handleGetAnswerClick}>
+          Get troubleshooting hints from ticket conversation
         </Button>
         <Divider />
         {loading && (
           <LoadingSpinner
-            label="Response is loading"
+            label="🤖🪄 AI Agent working..."
             showLabel={true}
-            size="sm"
+            size="md"
             layout="centered"
           ></LoadingSpinner>
         )}

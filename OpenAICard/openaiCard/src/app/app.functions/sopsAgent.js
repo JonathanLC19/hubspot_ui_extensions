@@ -6,7 +6,6 @@ const fs = require("fs");
 const path = require("path");
 const exp = require("constants");
 const hubspot = require("@hubspot/api-client");
-const JSONLoader = require("./sop_documents.json");
 
 // const { DirectoryLoader } = require("langchain/document_loaders/fs/directory");
 // const { TextLoader } = require("langchain/document_loaders/fs/text");
@@ -17,9 +16,6 @@ dotenv.config();
 exports.main = async (context = {}) => {
   const { hs_object_id } = context.parameters;
   // console.log("hs_object_id: ", hs_object_id);
-
-  const sopDocs = JSONLoader;
-  console.log("SOPs: ", sopDocs);
 
   const docResult = await readDocxFile(fullPath);
   const fileContent = docResult.content;
@@ -50,6 +46,7 @@ exports.main = async (context = {}) => {
   // );
   // Normalize the messages
   const normalizedMessages = flatCommunications.map((msg) => ({
+    assocs: msg.associations,
     engagement: msg.engagement,
     // type: msg.type,
     // direction: msg.direction,
@@ -65,6 +62,7 @@ exports.main = async (context = {}) => {
   //   JSON.stringify(normalizedMessages, null, 2),
   // );
   const messagesMetadata = normalizedMessages.map((msg) => ({
+    // assocTicketId: msg.assocs,
     type: msg.engagement.type,
     id: msg.engagement.id,
     createdAt: msg.engagement.createdAt,
@@ -82,9 +80,30 @@ exports.main = async (context = {}) => {
 
   // Filter messages that have conversationsThreadId in metadata
   let threads = [];
+  let ticketThread = [];
   const messagesWithThreads = messages.filter(
     (msg) => msg.metadata && msg.metadata.conversationsThreadId,
   );
+  // console.log(
+  //   "Messages With Threads: ",
+  //   JSON.stringify(messagesWithThreads, null, 2),
+  // );
+  // const threadMsgs = JSON.stringify(messagesWithThreads, null, 2);
+  // console.log("Thread Msgs: ", threadMsgs);
+
+  const specificTicketId = Number(hs_object_id);
+  const messagesForTicket = messagesWithThreads.filter(
+    (msg) =>
+      msg.associations &&
+      Array.isArray(msg.associations.ticketIds) &&
+      msg.associations.ticketIds.includes(specificTicketId),
+  );
+
+  // console.log(
+  //   `Mensajes asociados al ticket ${specificTicketId}:`,
+  //   JSON.stringify(messagesForTicket, null, 2),
+  // );
+
   if (messagesWithThreads.length > 0) {
     const threadPromises = messagesWithThreads.map((msg) =>
       getThread(msg.metadata.conversationsThreadId),
@@ -92,59 +111,81 @@ exports.main = async (context = {}) => {
     threads = await Promise.all(threadPromises);
   }
   // console.log("Threads: ", JSON.stringify(threads, null, 2));
+
+  if (messagesForTicket.length > 0) {
+    const ticketThreadPromises = messagesForTicket.map((msg) =>
+      getThread(msg.metadata.conversationsThreadId),
+    );
+    ticketThread = await Promise.all(ticketThreadPromises);
+  }
+  // console.log("Ticket Thread: ", JSON.stringify(ticketThread, null, 2));
+
   const flatThreads = threads.flat();
   // console.log("Flatted Threads: ", JSON.stringify(flatThreads, null, 2));
-  const threadsMetadata = flatThreads.map((msg) => ({
-    threadId: msg.conversationsThreadId,
-    channelId: msg.channelId,
-    direction: msg.direction,
-    createdAt: msg.createdAt,
-    text: msg.text
+  const threadsMetadata = flatThreads.map((thr) => ({
+    threadId: thr.conversationsThreadId,
+    channelId: thr.channelId,
+    direction: thr.direction,
+    createdAt: thr.createdAt,
+    text: thr.text
       .replace(/[^\w\s]/g, "")
       .replace(/\n/g, " ")
       .replace(/\s+/g, " ")
       .trim(),
   }));
+  // console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
 
-  // console.log(JSONLoader);
+  const ticketFlatThreads = ticketThread.flat();
+  // console.log("Flatted Threads: ", JSON.stringify(flatThreads, null, 2));
+  const ticketThreadsMetadata = ticketFlatThreads.map((thr) => ({
+    threadId: thr.conversationsThreadId,
+    channelId: thr.channelId,
+    direction: thr.direction,
+    createdAt: thr.createdAt,
+    text: thr.text
+      .replace(/[^\w\s]/g, "")
+      .replace(/\n/g, " ")
+      .replace(/\s+/g, " ")
+      .trim(),
+  }));
+  console.log(
+    "Normalized Current Ticket Threads: ",
+    JSON.stringify(ticketThreadsMetadata, null, 2),
+  );
+  // ####################################################################################################
+
+  // console.log("####################  SOP FILES #############################");
+  // const filePaths = getFilePaths(directoryPath);
+  // console.log(filePaths);
 
   // Get OpenAI API key from secrets
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OpenAI API key not found in secrets");
   }
-  const { prompt } = context.parameters;
+  const prompt = JSON.stringify(ticketThreadsMetadata, null, 2);
   // console.log("Question: ", prompt);
   // console.log("#################################################");
 
   // System prompt
-  const system = `You are a helpful guest experience agent in an accommodation company.
-  To find the troubleshooting hints for this case: ${prompt}, first identify the different issues, requests, questions, feedback, etc. the case is related to and then list the specific SOP documents from these SOPs: ${JSON.stringify(sopDocs, null, 2)} that you suggest to
-  go and get the resolution hints. If you find more than one issue, request, question, etc. return the SOP refered to each one of them.
-  If some of the reasons are related to requests, look for documents related to request handling, like cleaning requests or extension requests.
-  If some of the reasons are related to issues like malfunctions, broken furniture, or other problems, look for documents related to these issues, like malfunctions, broken furniture, etc.
-  If some of the reasons are related to complaints, look for documents related to complaints, like complaints, complaints handling, etc.
-  If some of the reasons are related to feedback, look for documents related to feedback, like feedback, feedback handling, etc.
-  Return only the source name of each SOP document.
-`;
-  // const system = `You are a helpful guest experience agent in an accommodation company.
-  // Here are the Standard Operating Procedures (SOPs) for guest experience: ${JSON.stringify(sopDocs, null, 2)}
+  const system = `You are a helpful guest experience agent in an accomodation company.
+  Read this text related to guest experience team S.O.P.: ${fileContent} and help me find a better solution for this case addresing it by checking this case's conversation thread with the guest: ${prompt}. It's very important to check also the communications history with the client to identify if there have been any other cases related to these issues or other ones in the past.
+  Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
+  Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
+  Format your response in this structure:
+  1. **Communications**: Brief description of the conversations with the client. If no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to emphasizing and giving priority to previous conversations related to other issues managed.
+  2. **Sentiment**: The sentiment of the client about the case based on the tone of their messages. Choose from these options:
+    - 😉 POSITVE
+    - 😕 NEUTRAL
+    - 😡 NEGATIVE
+  3. **Troubleshooting Steps**:
+    - Step-by-step instructions
+    - Include any specific checks needed
+  4. **Proposed Message to the Client:**:
+    - Finally, give me a proposed message to send to the client to keep handling the case.
+  
+  To give troubleshooting hints, always take guest's conversations and communications into consideration to detect if the same case or similar has happend before.`;
 
-  // Please help me find a solution for this guest case: ${prompt}
-
-  // It's very important to check the communications history with the client first to identify if there have been any other cases related to these issues or other ones in the past.
-
-  // Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
-  // Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
-
-  // Format your response in this structure:
-  // 1. **Sources**: List the specific SOP documents from the provided JSON that you used to find the troubleshooting hints. Reference them by their titles.
-  // 2. **Communications**: Brief description of the conversations with the client. If no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to emphasizing and giving priority to previous conversations related to other issues managed.
-  // 3. **Troubleshooting Steps**:
-  //   - Step-by-step instructions
-  //   - Include any specific checks needed
-
-  // To give troubleshooting hints, always take guest's conversations and communications into consideration to detect if the same case or similar has happened before.`;
   const client = axios.create({
     headers: {
       Authorization: `Bearer ${apiKey}`,
@@ -162,8 +203,8 @@ exports.main = async (context = {}) => {
         content: prompt,
       },
     ],
-    model: "gpt-4o-mini",
-    max_completion_tokens: 100,
+    model: "gpt-4o",
+    max_tokens: 500,
     temperature: 0,
   };
 
@@ -305,7 +346,7 @@ async function readDocxFile(filePath, extractHtml = false) {
 }
 
 // Example usage
-const fullPath = path.join(__dirname, "GX SOPs", "A_C Malfunction.docx");
+const fullPath = path.join(__dirname, "GX SOPs", "No water presssure.docx");
 // console.log("Attempting to read:", fullPath);
 console.log("#################################################");
 if (!fs.existsSync(fullPath)) {
