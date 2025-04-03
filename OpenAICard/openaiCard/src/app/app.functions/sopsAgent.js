@@ -1,9 +1,9 @@
 // const OpenAI = require("openai");
 const dotenv = require("dotenv");
 const axios = require("axios");
-const mammoth = require("mammoth");
-const fs = require("fs");
-const path = require("path");
+// const mammoth = require("mammoth");
+// const fs = require("fs");
+// const path = require("path");
 // const exp = require("constants");
 const hubspot = require("@hubspot/api-client");
 
@@ -15,12 +15,12 @@ dotenv.config();
 // Entry function of this module, it fetches associated deals and calculates the statistics
 exports.main = async (context = {}) => {
   const { hs_object_id } = context.parameters;
-  // console.log("hs_object_id: ", hs_object_id);
 
-  const docResult = await readDocxFile(fullPath);
-  const fileContent = docResult.content;
-  // console.log("SOP: ", fileContent);
-  // ####################################################################################################
+  // Comment out SOP reading
+  // const docResult = await readDocxFile(fullPath);
+  // const fileContent = docResult.content;
+
+  // Keep all communications and messages fetching code
   const contactIds = await getAssociatedContacts(hs_object_id);
   const engmIds = await getAssociatedMessages(contactIds);
   let messages = [];
@@ -169,22 +169,22 @@ exports.main = async (context = {}) => {
 
   // System prompt
   const system = `You are a helpful guest experience agent in an accomodation company.
-  Read this text related to guest experience team S.O.P.: ${fileContent} and help me find a better solution for this case addresing it by checking this case's conversation thread with the guest: ${prompt}. It's very important to check also the communications history with the client to identify if there have been any other cases related to these issues or other ones in the past.
-  Guest communications history: ${JSON.stringify(messagesMetadata, null, 2)}
-  Guest conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
+  Analyze this case's conversation thread with the guest: ${prompt} and the complete communications history with the client.
+
+  Current ticket thread: ${JSON.stringify(ticketThreadsMetadata, null, 2)}
+  Previous communications:
+  - Messages history: ${JSON.stringify(messagesMetadata, null, 2)}
+  - Conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
+
   Format your response in this structure:
-  1. **Communications**: Brief description of the conversations with the client. If no specific mention of the related issues in the past, tell me briefly what prior conversations have been related to emphasizing and giving priority to previous conversations related to other issues managed.
-  2. **Sentiment**: The sentiment of the client about the case based on the tone of their messages. Choose from these options:
+  1. **Current Case Analysis**: Brief description of the current ticket's conversation thread and its context.
+  2. **Previous Communications**: Summary of past interactions with the client, highlighting any relevant patterns or recurring topics.
+  3. **Sentiment**: The sentiment of the client about the case based on the tone of their messages. Choose from these options:
     - 😉 POSITVE
     - 😕 NEUTRAL
     - 😡 NEGATIVE
-  3. **Troubleshooting Steps**:
-    - Step-by-step instructions
-    - Include any specific checks needed
   4. **Proposed Message to the Client:**:
-    - Finally, give me a proposed message to send to the client to keep handling the case.
-  
-  To give troubleshooting hints, always take guest's conversations and communications into consideration to detect if the same case or similar has happend before.`;
+    - Provide a suggested message to send to the client to address their current case.`;
 
   const client = axios.create({
     headers: {
@@ -203,7 +203,7 @@ exports.main = async (context = {}) => {
         content: prompt,
       },
     ],
-    model: "gpt-4o",
+    model: "gpt-4o-mini",
     max_tokens: 500,
     temperature: 0,
   };
@@ -317,14 +317,8 @@ async function getThread(threadId) {
   }
 }
 
-// ################################### DOCX READER (SINGLE DOC) #######################################
-// DOCX READER
-/**
- * Reads a .docx file and extracts its content as HTML or plain text
- * @param {string} filePath - Path to the .docx file
- * @param {boolean} extractHtml - Whether to extract as HTML (true) or plain text (false)
- * @returns {Promise<{value: string, messages: Array}>} - The extracted content and any warning messages
- */
+// Comment out all SOP-related functions
+/*
 async function readDocxFile(filePath, extractHtml = false) {
   try {
     // Read the file as a buffer
@@ -369,7 +363,9 @@ function getFilePaths(dir, fileList = []) {
   });
   return fileList;
 }
+*/
 
+// Keep all the communication-related functions
 // const loader = new DirectoryLoader(
 //   "OpenAICard/openaiCard/src/app/app.functions/GX SOPs/Broken Bed.docx",
 //   {
