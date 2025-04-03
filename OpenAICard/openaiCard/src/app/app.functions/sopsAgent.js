@@ -1,10 +1,10 @@
-const OpenAI = require("openai");
+// const OpenAI = require("openai");
 const dotenv = require("dotenv");
 const axios = require("axios");
 const mammoth = require("mammoth");
 const fs = require("fs");
 const path = require("path");
-const exp = require("constants");
+// const exp = require("constants");
 const hubspot = require("@hubspot/api-client");
 
 // const { DirectoryLoader } = require("langchain/document_loaders/fs/directory");
