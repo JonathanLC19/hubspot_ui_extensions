@@ -177,9 +177,12 @@ exports.main = async (context = {}) => {
   - Conversations history (channelId 1007 is referred to Whatsapp): ${JSON.stringify(threadsMetadata, null, 2)}
 
   Format your response in this structure:
-  1. **Current Case Analysis**: Brief description of the current ticket's conversation thread and its context.
-  2. **Previous Communications**: Summary of past interactions with the client, highlighting any relevant patterns or recurring topics.
-  3. **Sentiment**: The sentiment of the client about the case based on the tone of their messages. Choose from these options:
+  1. **Current Case Analysis**: 
+  - Brief description of the current ticket's conversation thread and its context.
+  2. **Previous Communications**: 
+  - Summary of past interactions with the client, highlighting any relevant patterns or recurring topics.
+  3. **Sentiment**: {Place the sentiment here}
+  - The sentiment of the client about the case based on the tone of their messages. Choose from these options:
     - 😉 POSITVE
     - 😕 NEUTRAL
     - 😡 NEGATIVE
