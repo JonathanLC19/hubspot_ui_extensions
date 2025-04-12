@@ -36,6 +36,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
   const [issueType, setIssueType] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentObjectId, setCurrentObjectId] = useState(null);
+  const [currentDate, setCurrentDate] = useState(getDate());
 
   useEffect(() => {
     const fetchData = async () => {
@@ -101,6 +102,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         setIsValid(true);
         console.log("Setting result with:", response.response);
         setResult(response.response);
+        setCurrentDate(getDate());
       }
     } catch (err) {
       setValidationMessage("Error processing your question");
@@ -115,6 +117,17 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
   const handleGetAnswerClick = () => {
     fetchSOPInformation();
   };
+
+  function getDate() {
+    const currentDate = new Date();
+    return currentDate.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
 
   return (
     <>
@@ -150,6 +163,9 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         {result && (
           <Flex direction="column" gap="small">
             <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text>
+            <Text format={{ fontWeight: "bold" }}>Last updated:</Text>
+            <Text>{currentDate}</Text>
+            <Divider />
             <Flex
               direction="column"
               gap="medium"
