@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   hubspot,
+  Text,
   TextArea,
   Button,
   Divider,

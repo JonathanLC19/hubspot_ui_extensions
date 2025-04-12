@@ -892,7 +892,7 @@ exports.main = async (context = {}) => {
         content: prompt,
       },
     ],
-    model: "gpt-3.5-turbo-0125",
+    model: "gpt-4o-mini",
     max_tokens: 50,
     temperature: 0,
   };

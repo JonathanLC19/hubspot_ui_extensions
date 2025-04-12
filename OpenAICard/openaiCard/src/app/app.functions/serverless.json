@@ -3,6 +3,10 @@
     "sopsAgent": {
       "file": "sopsAgent.js",
       "secrets": ["OPENAI_API_KEY"]
+    },
+    "updateIssueType": {
+      "file": "updateIssueType.js",
+      "secrets": []
     }
   }
 }
