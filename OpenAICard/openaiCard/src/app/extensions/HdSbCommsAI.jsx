@@ -189,7 +189,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
           validationMessage={validationMessage}
         /> */}
         <Button variant="primary" onClick={handleGetAnswerClick}>
-          Summarize guest communications
+          Summarize Guest Communications
         </Button>
         <Divider />
         {loading && (
@@ -203,7 +203,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         {!isValid && <Text>{validationMessage}</Text>}
         {result && (
           <Flex direction="column" gap="small">
-            <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text>
+            {/* <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text> */}
             <Text format={{ fontWeight: "bold" }}>Last updated:</Text>
             <Text>{currentDate}</Text>
             <Divider />

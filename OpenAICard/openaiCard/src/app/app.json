@@ -8,7 +8,8 @@
     "collector.graphql_query.execute",
     "crm.objects.contacts.read",
     "crm.objects.contacts.write",
-    "crm.schemas.contacts.read"
+    "crm.schemas.contacts.read",
+    "conversations.read"
   ],
   "public": false,
   "extensions": {
@@ -19,6 +20,9 @@
         },
         {
           "file": "extensions/sop-agent-card.json"
+        },
+        {
+          "file": "extensions/helpdesk-card.json"
         }
       ]
     }
