@@ -133,7 +133,7 @@ exports.main = async (context = {}) => {
       .replace(/\s+/g, " ")
       .trim(),
   }));
-  // console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
+  console.log("Normalized Threads: ", JSON.stringify(threadsMetadata, null, 2));
 
   const ticketFlatThreads = ticketThread.flat();
   // console.log("Flatted Threads: ", JSON.stringify(flatThreads, null, 2));

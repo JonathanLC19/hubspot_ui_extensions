@@ -37,10 +37,6 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
   const [loading, setLoading] = useState(false);
   const [currentObjectId, setCurrentObjectId] = useState(null);
   const [currentDate, setCurrentDate] = useState(getDate());
-  const [currentAnalysis, setCurrentAnalysis] = useState("");
-  const [previousComms, setPreviousComms] = useState("");
-  const [sentiment, setSentiment] = useState("");
-  const [proposedMessage, setProposedMessage] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -80,23 +76,32 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
   // Fetch SOP information based on the question
   const fetchSOPInformation = async () => {
     try {
-      if (!description.trim()) {
-        setValidationMessage("Please enter your question about SOPs.");
-        setIsValid(false);
-        return;
-      }
       setLoading(true);
       const response = await runServerless({
         name: "sopsAgent",
         parameters: {
-          prompt: description,
           hs_object_id: currentObjectId,
         },
       });
 
       console.log("Full response:", response);
 
-      if (response.error) {
+      if (response.status === "error") {
+        let errorMessage = "Error fetching SOP information";
+
+        // Handle 403 error specifically
+        if (
+          response.errors?.[0]?.subCategory ===
+            "ServerlessActionExecutionError.SERVERLESS_FUNCTION_ERROR" &&
+          response.errors[0].message?.includes("403")
+        ) {
+          errorMessage =
+            "Authentication error. Please check your API credentials and permissions.";
+        }
+
+        setValidationMessage(errorMessage);
+        setIsValid(false);
+      } else if (response.error) {
         setValidationMessage(
           response.error.message || "Error fetching SOP information",
         );
@@ -104,23 +109,9 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
       } else {
         setValidationMessage("Question processed successfully!");
         setIsValid(true);
-        const newDate = getDate();
-
-        // Parse the response into sections
-        const sections = response.response.split("\n\n");
-        sections.forEach((section) => {
-          if (section.includes("Current Case Analysis")) {
-            setCurrentAnalysis(section.replace(/^\d+\.\s+\*\*/, ""));
-          } else if (section.includes("Previous Communications")) {
-            setPreviousComms(section.replace(/^\d+\.\s+\*\*/, ""));
-          } else if (section.includes("Sentiment")) {
-            setSentiment(section.replace(/^\d+\.\s+\*\*/, ""));
-          } else if (section.includes("Proposed Message")) {
-            setProposedMessage(section.replace(/^\d+\.\s+\*\*/, ""));
-          }
-        });
-
-        setCurrentDate(newDate);
+        console.log("Setting result with:", response.response);
+        setResult(response.response);
+        setCurrentDate(getDate());
       }
     } catch (err) {
       setValidationMessage("Error processing your question");
@@ -155,6 +146,16 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         wrap={"wrap"}
         gap={"small"}
       >
+        {/* TextArea for user to input their SOP-related questions 
+        <TextArea
+          label="Question"
+          name="description"
+          placeholder="Ask a question about SOPs..."
+          value={description}
+          onChange={handleDescriptionChange}
+          error={!isValid}
+          validationMessage={validationMessage}
+        /> */}
         <Button variant="primary" onClick={handleGetAnswerClick}>
           Get troubleshooting hints from ticket conversation
         </Button>
@@ -168,7 +169,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
           ></LoadingSpinner>
         )}
         {!isValid && <Text>{validationMessage}</Text>}
-        {(currentAnalysis || previousComms || sentiment || proposedMessage) && (
+        {result && (
           <Flex direction="column" gap="small">
             <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text>
             <Text format={{ fontWeight: "bold" }}>Last updated:</Text>
@@ -184,10 +185,38 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
                 whiteSpace: "pre-wrap",
               }}
             >
-              {currentAnalysis && <Text>{currentAnalysis}</Text>}
-              {previousComms && <Text>{previousComms}</Text>}
-              {sentiment && <Text>{sentiment}</Text>}
-              {proposedMessage && <Text>{proposedMessage}</Text>}
+              {result.split("\n").map((line, index) => {
+                // Check for different types of lines
+                const isNumberedSection = /^\d+\.\s\*\*.*\*\*/.test(
+                  line.trim(),
+                );
+                const isBulletPoint = line.trim().startsWith("-");
+                const indentLevel = isBulletPoint ? "24px" : "0";
+
+                let formattedLine = line;
+                if (isNumberedSection) {
+                  formattedLine = line.replace(
+                    /^\d+\.\s\*\*(.*?)\*\*:?/,
+                    "$1:",
+                  );
+                }
+
+                return (
+                  <Text
+                    key={index}
+                    style={{
+                      marginLeft: indentLevel,
+                      marginTop: isNumberedSection ? "12px" : "4px",
+                    }}
+                    format={{
+                      fontWeight: isNumberedSection ? "bold" : "regular",
+                      fontSize: isNumberedSection ? "14px" : "13px",
+                    }}
+                  >
+                    {formattedLine}
+                  </Text>
+                );
+              })}
             </Flex>
           </Flex>
         )}

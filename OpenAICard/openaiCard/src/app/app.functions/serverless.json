@@ -7,6 +7,10 @@
     "updateIssueType": {
       "file": "updateIssueType.js",
       "secrets": []
+    },
+    "issueFinder": {
+      "file": "issueFinder.js",
+      "secrets": ["OPENAI_API_KEY"]
     }
   }
 }
