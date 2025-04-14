@@ -115,11 +115,13 @@ exports.main = async (context = {}) => {
         : "",
     }));
 
-    // console.log({ docs });
     // console.log(
     //   "Messages Metadata: ",
     //   JSON.stringify(messagesMetadata, null, 2),
     // );
+
+    const messageTypes = [...new Set(messagesMetadata.map((msg) => msg.type))];
+    console.log("Message Types:", messageTypes);
 
     // Filter messages that have conversationsThreadId in metadata
     let threads = [];
@@ -142,10 +144,10 @@ exports.main = async (context = {}) => {
         msg.associations.ticketIds.includes(specificTicketId),
     );
 
-    console.log(
-      `Mensajes asociados al ticket ${specificTicketId}:`,
-      JSON.stringify(messagesForTicket, null, 2),
-    );
+    // console.log(
+    //   `Mensajes asociados al ticket ${specificTicketId}:`,
+    //   JSON.stringify(messagesForTicket, null, 2),
+    // );
 
     if (messagesWithThreads.length > 0) {
       const threadPromises = messagesWithThreads.map((msg) =>
@@ -176,10 +178,10 @@ exports.main = async (context = {}) => {
         .replace(/\s+/g, " ")
         .trim(),
     }));
-    console.log(
-      "Normalized Threads: ",
-      JSON.stringify(threadsMetadata, null, 2),
-    );
+    // console.log(
+    //   "Normalized Threads: ",
+    //   JSON.stringify(threadsMetadata, null, 2),
+    // );
 
     const ticketFlatThreads = ticketThread.flat();
     // console.log("Flatted Threads: ", JSON.stringify(flatThreads, null, 2));
@@ -200,9 +202,46 @@ exports.main = async (context = {}) => {
     );
     // ####################################################################################################
 
-    // console.log("####################  SOP FILES #############################");
-    // const filePaths = getFilePaths(directoryPath);
-    // console.log(filePaths);
+    const threadChannels = [
+      {
+        id: "1000",
+        name: "LIVE_CHAT",
+      },
+      {
+        id: "1001",
+        name: "FB_MESSENGER",
+      },
+      {
+        id: "1002",
+        name: "EMAIL",
+      },
+      {
+        id: "1003",
+        name: "FORMS",
+      },
+      {
+        id: "1004",
+        name: "CUSTOMER_PORTAL_THREAD_VIEW",
+      },
+      {
+        id: "1007",
+        name: "WHATSAPP",
+      },
+      {
+        id: "1008",
+        name: "CALL",
+      },
+      {
+        id: "1009",
+        name: "SMS",
+      },
+      {
+        id: "917161",
+        name: "SMS with Aircall",
+      },
+    ];
+
+    const channelNames = threadChannels.map((channel) => channel.name);
 
     // Get OpenAI API key from secrets
     const apiKey = process.env.OPENAI_API_KEY;
@@ -219,7 +258,7 @@ exports.main = async (context = {}) => {
 
     Current ticket thread: ${JSON.stringify(ticketThreadsMetadata, null, 2)}
     Previous communications:
-    - Messages history: ${JSON.stringify(messagesMetadata, null, 2)}
+    - Messages history: ${JSON.stringify(messagesMetadata, null, 2)} .
     - Conversations history: ${JSON.stringify(threadsMetadata, null, 2)}
     
     Format your response in this structure:
@@ -232,6 +271,8 @@ exports.main = async (context = {}) => {
     Brief description of the current ticket's conversation thread and its context.
     3. **Previous Communications**: 
     Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
+    4. **Channels Used**:
+    Use the values from ${messageTypes} to identify the channels used for the previous communications. 
     `;
 
     const client = axios.create({
