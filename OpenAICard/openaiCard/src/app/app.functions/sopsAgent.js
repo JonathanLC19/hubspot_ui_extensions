@@ -272,7 +272,7 @@ exports.main = async (context = {}) => {
     3. **Previous Communications**: 
     Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
     4. **Channels Used**:
-    Use the values from ${messageTypes} to identify the channels used for the previous communications. 
+    Use the values from ${messageTypes} to identify and give a short description of the channels used for the previous communications. 
     `;
 
     const client = axios.create({
