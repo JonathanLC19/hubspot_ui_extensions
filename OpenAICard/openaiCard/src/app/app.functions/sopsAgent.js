@@ -68,7 +68,46 @@ exports.main = async (context = {}) => {
       const messagePromises = engmIds.map((id) => getEngagement(id));
       messages = await Promise.all(messagePromises);
     }
-    // console.log("Messages: ", JSON.stringify(messages, null, 2));
+    console.log("Messages: ", JSON.stringify(messages, null, 2));
+
+    // Current ticket messages - Fixed filtering
+    const currentTicketMessages = messages.filter((msg) => {
+      return (
+        msg.associations &&
+        Array.isArray(msg.associations.ticketIds) &&
+        msg.associations.ticketIds.includes(Number(hs_object_id)) // Convert to number for comparison
+      );
+    });
+
+    // console.log("Ticket ID being searched:", Number(hs_object_id));
+    // console.log(
+    //   "Current Ticket Messages:",
+    //   JSON.stringify(currentTicketMessages, null, 2),
+    // );
+
+    // Normalized Current Ticket Messages
+    const normalizedCurrentTicketMessages = currentTicketMessages.map(
+      (msg) => ({
+        assocs: msg.associations,
+        // engagement: msg.engagement,
+        type: msg.engagement.type,
+        // direction: msg.direction,
+        createdAt: msg.engagement.createdAt,
+        // bodyPreview: msg.engagement.bodyPreview,
+        text: msg.metadata.text
+          ? msg.metadata.text
+              .replace(/[^\w\s]/g, "")
+              .replace(/\n/g, " ")
+              .replace(/\s+/g, " ")
+              .trim()
+          : "",
+      }),
+    );
+
+    console.log(
+      "Normalized Current Ticket Messages: ",
+      JSON.stringify(normalizedCurrentTicketMessages, null, 2),
+    );
 
     // Filter messages that don't have conversationsThreadId in metadata
     let communications = [];
@@ -256,7 +295,11 @@ exports.main = async (context = {}) => {
     const system = `You are a helpful guest experience agent in an accomodation company.
     Analyze this case's conversation thread with the guest: ${prompt} and the complete communications history with the client.
 
-    Current ticket thread: ${JSON.stringify(ticketThreadsMetadata, null, 2)}
+    Current ticket conversations: ${JSON.stringify(ticketThreadsMetadata, null, 2)} and/or ${JSON.stringify(
+      normalizedCurrentTicketMessages,
+      null,
+      2,
+    )}
     Previous communications:
     - Messages history: ${JSON.stringify(messagesMetadata, null, 2)} .
     - Conversations history: ${JSON.stringify(threadsMetadata, null, 2)}
@@ -268,7 +311,7 @@ exports.main = async (context = {}) => {
       😕 NEUTRAL
       😡 NEGATIVE
     2. **Current Case Analysis**: 
-    Brief description of the current ticket's conversation thread and its context.
+    Brief description of the current ticket's conversations and its context.
     3. **Previous Communications**: 
     Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
     4. **Channels Used**:
