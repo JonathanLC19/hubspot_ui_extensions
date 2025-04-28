@@ -13,6 +13,7 @@ import {
   //   TableRow,
   //   TableHeader,
   Text,
+  Alert,
 } from "@hubspot/ui-extensions";
 
 // Define the HubSpot UI extension entry point
@@ -209,8 +210,11 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         {result && (
           <Flex direction="column" gap="small">
             {/* <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text> */}
-            <Text format={{ fontWeight: "bold" }}>Ticket Source:</Text>
-            <Text>{source}</Text>
+            <Alert title="Ticket Source" variant="info">
+              {source}
+            </Alert>
+            {/* <Text format={{ fontWeight: "bold" }}>Ticket Source:</Text>
+            <Text>{source}</Text> */}
             <Text format={{ fontWeight: "bold" }}>Last updated:</Text>
             <Text>{currentDate}</Text>
             <Divider />
