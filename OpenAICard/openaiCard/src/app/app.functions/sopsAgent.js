@@ -297,6 +297,9 @@ exports.main = async (context = {}) => {
 
     // System prompt
     const system = `You are a helpful guest experience agent in an accomodation company.
+    ${source_type === "GUEST PORTAL" || source_type === "CONTACT US PAGE" 
+      ? `Initial ticket content from ${source_type}: ${content}\n` 
+      : ""}
     Analyze this case's conversation thread with the guest: ${prompt} and the complete communications history with the client.
     
     Current ticket conversations: ${JSON.stringify(ticketThreadsMetadata, null, 2)} and/or ${JSON.stringify(
@@ -309,7 +312,7 @@ exports.main = async (context = {}) => {
     - Conversations history: ${JSON.stringify(threadsMetadata, null, 2)}
 
     Format your response in this structure:
-    1. **Sentiment**: {Place the sentiment here}
+    1. **Sentiment**: {Place the sentiment here if applies}
       The sentiment of the client about the case based on the tone of their messages. 
       If there are no current ticket conversations available to analyze, just say that sentiment doesn't apply for this ticket because no conversation has been identified. 
       Choose from these options:
@@ -318,7 +321,9 @@ exports.main = async (context = {}) => {
         😡 NEGATIVE
 
     2. **Current Case Analysis**: 
-      Brief description of the current ticket's conversations and its context.
+      ${source_type === "GUEST PORTAL" || source_type === "CONTACT US PAGE" 
+        ? "Start with analyzing the initial ticket content, then proceed with " 
+        : ""}Brief description of the current ticket's conversations and its context.
     3. **Previous Communications**: 
       Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
     4. **Channels Used**:
