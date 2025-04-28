@@ -31,6 +31,7 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
   const [result, setResult] = useState("");
+  const [source, setSource] = useState("");
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [issueType, setIssueType] = useState("");
@@ -46,10 +47,12 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
           "content",
           "issue_type",
           "hs_object_id",
+          "source_type",
         ]);
 
         setSubject(properties.subject);
         setContent(properties.content);
+        setSource(properties.source_type);
         setDescription(
           "Help me troubleshoot this request: " + "\n" + properties.content,
         );
@@ -83,6 +86,8 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         name: "sopsAgent",
         parameters: {
           hs_object_id: currentObjectId,
+          source_type: source,
+          content: content,
           verifyKeys: true, // Add flag to request key verification
         },
       });
@@ -204,6 +209,8 @@ const Extension = ({ context, runServerless, fetchProperties }) => {
         {result && (
           <Flex direction="column" gap="small">
             {/* <Text format={{ fontWeight: "bold" }}>Troubleshooting Guide</Text> */}
+            <Text format={{ fontWeight: "bold" }}>Ticket Source:</Text>
+            <Text>{source}</Text>
             <Text format={{ fontWeight: "bold" }}>Last updated:</Text>
             <Text>{currentDate}</Text>
             <Divider />
