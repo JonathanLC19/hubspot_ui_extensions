@@ -9,7 +9,9 @@
     "crm.objects.contacts.read",
     "crm.objects.contacts.write",
     "crm.schemas.contacts.read",
-    "conversations.read"
+    "conversations.read",
+    "crm.objects.deals.read",
+    "sales-email-read"
   ],
   "public": false,
   "extensions": {
