@@ -15,7 +15,7 @@ dotenv.config();
 // Entry function of this module, it fetches associated deals and calculates the statistics
 exports.main = async (context = {}) => {
   try {
-    const { hs_object_id } = context.parameters;
+    const { hs_object_id, source_type, content } = context.parameters;
 
     // Verify HubSpot token first
     const hubspotToken = process.env.PRIVATE_APP_ACCESS_TOKEN;
@@ -36,6 +36,10 @@ exports.main = async (context = {}) => {
       hubspotPrefix: hubspotToken.substring(0, 8) + "...",
       openaiPrefix: openaiToken.substring(0, 8) + "...",
     });
+
+    // Log the received source and content
+    console.log("Ticket Source:", source_type);
+    console.log("Ticket Content:", content);
 
     // Test HubSpot token with a simple API call
     const hubSpotClient = new hubspot.Client({ accessToken: hubspotToken });
@@ -68,7 +72,7 @@ exports.main = async (context = {}) => {
       const messagePromises = engmIds.map((id) => getEngagement(id));
       messages = await Promise.all(messagePromises);
     }
-    console.log("Messages: ", JSON.stringify(messages, null, 2));
+    // console.log("Messages: ", JSON.stringify(messages, null, 2));
 
     // Current ticket messages - Fixed filtering
     const currentTicketMessages = messages.filter((msg) => {
@@ -104,10 +108,10 @@ exports.main = async (context = {}) => {
       }),
     );
 
-    console.log(
-      "Normalized Current Ticket Messages: ",
-      JSON.stringify(normalizedCurrentTicketMessages, null, 2),
-    );
+    // console.log(
+    //   "Normalized Current Ticket Messages: ",
+    //   JSON.stringify(normalizedCurrentTicketMessages, null, 2),
+    // );
 
     // Filter messages that don't have conversationsThreadId in metadata
     let communications = [];
@@ -160,7 +164,7 @@ exports.main = async (context = {}) => {
     // );
 
     const messageTypes = [...new Set(messagesMetadata.map((msg) => msg.type))];
-    console.log("Message Types:", messageTypes);
+    // console.log("Message Types:", messageTypes);
 
     // Filter messages that have conversationsThreadId in metadata
     let threads = [];
@@ -235,10 +239,10 @@ exports.main = async (context = {}) => {
         .replace(/\s+/g, " ")
         .trim(),
     }));
-    console.log(
-      "Normalized Current Ticket Threads: ",
-      JSON.stringify(ticketThreadsMetadata, null, 2),
-    );
+    // console.log(
+    //   "Normalized Current Ticket Threads: ",
+    //   JSON.stringify(ticketThreadsMetadata, null, 2),
+    // );
     // ####################################################################################################
 
     const threadChannels = [
@@ -294,7 +298,7 @@ exports.main = async (context = {}) => {
     // System prompt
     const system = `You are a helpful guest experience agent in an accomodation company.
     Analyze this case's conversation thread with the guest: ${prompt} and the complete communications history with the client.
-
+    
     Current ticket conversations: ${JSON.stringify(ticketThreadsMetadata, null, 2)} and/or ${JSON.stringify(
       normalizedCurrentTicketMessages,
       null,
@@ -303,23 +307,22 @@ exports.main = async (context = {}) => {
     Previous communications:
     - Messages history: ${JSON.stringify(messagesMetadata, null, 2)} .
     - Conversations history: ${JSON.stringify(threadsMetadata, null, 2)}
-    
 
     Format your response in this structure:
     1. **Sentiment**: {Place the sentiment here}
-    The sentiment of the client about the case based on the tone of their messages. Choose from these options:
-      😉 POSITVE
-      😕 NEUTRAL
-      😡 NEGATIVE
-    In case you can't find any messages history, display a "No messages found for this ticket" message.
+      The sentiment of the client about the case based on the tone of their messages. 
+      If there are no current ticket conversations available to analyze, just say that sentiment doesn't apply for this ticket because no conversation has been identified. 
+      Choose from these options:
+        😉 POSITVE
+        😕 NEUTRAL
+        😡 NEGATIVE
+
     2. **Current Case Analysis**: 
-    Brief description of the current ticket's conversations and its context.
-    In case you can't find any conversation history in this case, display a "No conversations found in this ticket" message.
+      Brief description of the current ticket's conversations and its context.
     3. **Previous Communications**: 
-    Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
-    In case you can't find any previous communications, display a "No previous communications found for this ticket" message.
+      Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
     4. **Channels Used**:
-    Use the values from ${messageTypes} to identify and give a short description of the channels used for the previous communications. 
+      Use the values from ${messageTypes} to identify and give a short description of the channels used for the previous communications. 
     `;
 
     const client = axios.create({
