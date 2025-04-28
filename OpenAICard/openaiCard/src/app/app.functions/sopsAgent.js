@@ -304,16 +304,20 @@ exports.main = async (context = {}) => {
     - Messages history: ${JSON.stringify(messagesMetadata, null, 2)} .
     - Conversations history: ${JSON.stringify(threadsMetadata, null, 2)}
     
+
     Format your response in this structure:
     1. **Sentiment**: {Place the sentiment here}
     The sentiment of the client about the case based on the tone of their messages. Choose from these options:
       😉 POSITVE
       😕 NEUTRAL
       😡 NEGATIVE
+    In case you can't find any messages history, display a "No messages found for this ticket" message.
     2. **Current Case Analysis**: 
     Brief description of the current ticket's conversations and its context.
+    In case you can't find any conversation history in this case, display a "No conversations found in this ticket" message.
     3. **Previous Communications**: 
     Summary of Messages history and Conversations history, that refers to past interactions with the client, highlighting any relevant patterns or recurring topics.
+    In case you can't find any previous communications, display a "No previous communications found for this ticket" message.
     4. **Channels Used**:
     Use the values from ${messageTypes} to identify and give a short description of the channels used for the previous communications. 
     `;
