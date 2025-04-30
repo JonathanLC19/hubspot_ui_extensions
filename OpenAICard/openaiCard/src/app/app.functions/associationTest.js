@@ -137,6 +137,9 @@ async function getAssociatedWOs(hs_object_id) {
 }
 
 async function searchTickets(ticketId) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
   const PublicObjectSearchRequest = {
     properties: [
       "subject",
@@ -159,7 +162,7 @@ async function searchTickets(ticketId) {
   };
 
   try {
-    const apiResponse = await hubspotClient.crm.tickets.searchApi.doSearch(
+    const apiResponse = await hubSpotClient.crm.tickets.searchApi.doSearch(
       PublicObjectSearchRequest,
     );
     console.log(JSON.stringify(apiResponse, null, 2));
@@ -171,9 +174,12 @@ async function searchTickets(ticketId) {
 }
 
 async function searchWOs(WOId) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
   const PublicObjectSearchRequest = {
     properties: [
-      "subject",
+      "work_order_name",
       "hs_pipeline",
       "hs_pipeline_stage",
       "hubspot_owner_id",
@@ -193,7 +199,8 @@ async function searchWOs(WOId) {
   };
 
   try {
-    const apiResponse = await hubspotClient.crm.workorders.searchApi.doSearch(
+    const apiResponse = await hubSpotClient.crm.objects.searchApi.doSearch(
+      "workorders",
       PublicObjectSearchRequest,
     );
     console.log(JSON.stringify(apiResponse, null, 2));

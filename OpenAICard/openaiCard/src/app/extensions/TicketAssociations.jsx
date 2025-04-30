@@ -117,49 +117,10 @@ const Extension = ({
 
   return (
     <>
-      <Flex
-        direction={"column"}
-        justify={"between"}
-        wrap={"wrap"}
-        gap={"small"}
-      >
-        <TextArea
-          label="Description"
-          name="description"
-          placeholder="Enter text"
-          value={description}
-          onChange={handleDescriptionChange}
-          error={!isValid}
-          validationMessage={validationMessage}
-        />
-        <Button variant="primary" onClick={handleFetchIssueTypeClick}>
-          Refresh Issue Info
-        </Button>
-        <Divider />
-        {loading && (
-          <LoadingSpinner
-            label="Response is loading"
-            showLabel={true}
-            size="sm"
-            layout="centered"
-          ></LoadingSpinner>
-        )}
-        {!isValid && <Text>{validationMessage}</Text>}
-        {result && (
-          <Table bordered={true} width="auto">
-            <TableHead>
-              <TableRow>
-                <TableHeader>Type of Issue</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              <TableRow>
-                <TableCell>{result}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        )}
-      </Flex>
+      <Text>Ticket Associations</Text>
+      <Button variant="primary" onClick={handleGetAssociationsClick}>
+        Fetch Associations
+      </Button>
     </>
   );
 };
