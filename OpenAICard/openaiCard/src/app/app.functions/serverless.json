@@ -11,6 +11,10 @@
     "issueFinder": {
       "file": "issueFinder.js",
       "secrets": ["OPENAI_API_KEY"]
+    },
+    "associationTest": {
+      "file": "associationTest.js",
+      "secrets": ["OPENAI_API_KEY"]
     }
   }
 }

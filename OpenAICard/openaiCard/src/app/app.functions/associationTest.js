@@ -1,35 +1,110 @@
-const hubspot = require("@hubspot/api-client");
+// const OpenAI = require("openai");
 const dotenv = require("dotenv");
 const axios = require("axios");
+// const mammoth = require("mammoth");
+// const fs = require("fs");
+// const path = require("path");
+// const exp = require("constants");
+const hubspot = require("@hubspot/api-client");
+
+// const { DirectoryLoader } = require("langchain/document_loaders/fs/directory");
+// const { TextLoader } = require("langchain/document_loaders/fs/text");
 
 dotenv.config();
 
-const HS_API_KEY = process.env.PRIVATE_APP_ACCESS_TOKEN;
+// Entry function of this module, it fetches associated deals and calculates the statistics
+exports.main = async (context = {}) => {
+  try {
+    const { hs_object_id, source_type, content } = context.parameters;
 
-const hubspotClient = new hubspot.Client({
-  accessToken: HS_API_KEY,
-});
+    // Verify HubSpot token first
+    const hubspotToken = process.env.PRIVATE_APP_ACCESS_TOKEN;
+    if (!hubspotToken) {
+      throw new Error("HubSpot token not found in environment");
+    }
 
-const objectType = "tickets";
-const objectId = "95462768826";
-const toObjectType = "contacts";
-const after = undefined;
-const limit = 500;
+    // Verify OpenAI token
+    const openaiToken = process.env.OPENAI_API_KEY;
+    if (!openaiToken) {
+      throw new Error("OpenAI API key not found in environment");
+    }
 
-async function getAssociatedContacts() {
+    // Log verification status
+    console.log("API Keys Verification:", {
+      hubspot: !!hubspotToken,
+      openai: !!openaiToken,
+      hubspotPrefix: hubspotToken.substring(0, 8) + "...",
+      openaiPrefix: openaiToken.substring(0, 8) + "...",
+    });
+
+    // Log the received source and content
+    console.log("Ticket Source:", source_type);
+    console.log("Ticket Content:", content);
+
+    // Test HubSpot token with a simple API call
+    const hubSpotClient = new hubspot.Client({ accessToken: hubspotToken });
+    await hubSpotClient.crm.contacts.basicApi.getPage();
+
+    // Add logging for API keys verification
+    console.log(
+      "HubSpot Token available:",
+      !!process.env.PRIVATE_APP_ACCESS_TOKEN,
+    );
+    console.log("OpenAI Token available:", !!process.env.OPENAI_API_KEY);
+    console.log(
+      "HubSpot Token prefix:",
+      process.env.PRIVATE_APP_ACCESS_TOKEN?.substring(0, 8) + "...",
+    );
+    console.log(
+      "OpenAI Token prefix:",
+      process.env.OPENAI_API_KEY?.substring(0, 8) + "...",
+    );
+
+    // Get associated tickets and work orders
+    const ticketIds = await getAssociatedTickets(hs_object_id);
+    console.log("Ticket IDs:", ticketIds);
+    const workOrderIds = await getAssociatedWOs(hs_object_id);
+    console.log("Work Order IDs:", workOrderIds);
+
+    // Fetch associated tickets info
+    let associatedTickets = [];
+    if (ticketIds.length > 0) {
+      const ticketPromises = ticketIds.map((id) => searchTickets(id));
+      associatedTickets = await Promise.all(ticketPromises);
+      console.log("Associated Tickets:", associatedTickets);
+    }
+    // Fetch associated work orders info
+    let associatedWOs = [];
+    if (workOrderIds.length > 0) {
+      const workOrderPromises = workOrderIds.map((id) => searchWOs(id));
+      associatedWOs = await Promise.all(workOrderPromises);
+      console.log("Associated Work Orders:", associatedWOs);
+    }
+  } catch (error) {
+    console.error("Serverless function error:", error);
+    return {
+      status: "error",
+      error: error.message,
+      details: error.response?.data || "No additional details available",
+    };
+  }
+};
+
+async function getAssociatedTickets(hs_object_id) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
   try {
     const apiResponse =
-      await hubspotClient.crm.associations.v4.basicApi.getPage(
-        objectType,
-        objectId,
-        toObjectType,
-        after,
-        limit,
+      await hubSpotClient.crm.associations.v4.basicApi.getPage(
+        "tickets",
+        hs_object_id,
+        "tickets",
       );
-    const associatedContacts = apiResponse.results;
-    const contactIds = associatedContacts.map((contact) => contact.toObjectId);
+    const associatedTickets = apiResponse.results;
+    const ticketIds = associatedTickets.map((ticket) => ticket.toObjectId);
     // console.log(JSON.stringify(contactIds, null, 2));
-    return contactIds;
+    return ticketIds;
   } catch (e) {
     e.message === "HTTP request failed"
       ? console.error(JSON.stringify(e.response, null, 2))
@@ -38,15 +113,109 @@ async function getAssociatedContacts() {
   }
 }
 
-async function getAssociatedMessages(contactIds) {
+async function getAssociatedWOs(hs_object_id) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
   try {
     const apiResponse =
-      await hubspotClient.crm.associations.v4.basicApi.getPage(
+      await hubSpotClient.crm.associations.v4.basicApi.getPage(
+        "tickets",
+        hs_object_id,
+        "workorders",
+      );
+    const AssociatedWOs = apiResponse.results;
+    const WOIds = AssociatedWOs.map((workorder) => workorder.toObjectId);
+    // console.log(JSON.stringify(contactIds, null, 2));
+    return WOIds;
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+    return [];
+  }
+}
+
+async function searchTickets(ticketId) {
+  const PublicObjectSearchRequest = {
+    properties: [
+      "subject",
+      "hs_pipeline",
+      "hs_pipeline_stage",
+      "hubspot_owner_id",
+      "all_issue_type__cloned_",
+    ],
+    filterGroups: [
+      {
+        filters: [
+          {
+            propertyName: "hs_object_id",
+            value: ticketId,
+            operator: "EQ",
+          },
+        ],
+      },
+    ],
+  };
+
+  try {
+    const apiResponse = await hubspotClient.crm.tickets.searchApi.doSearch(
+      PublicObjectSearchRequest,
+    );
+    console.log(JSON.stringify(apiResponse, null, 2));
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+  }
+}
+
+async function searchWOs(WOId) {
+  const PublicObjectSearchRequest = {
+    properties: [
+      "subject",
+      "hs_pipeline",
+      "hs_pipeline_stage",
+      "hubspot_owner_id",
+      "issue_type",
+    ],
+    filterGroups: [
+      {
+        filters: [
+          {
+            propertyName: "hs_object_id",
+            value: WOId,
+            operator: "EQ",
+          },
+        ],
+      },
+    ],
+  };
+
+  try {
+    const apiResponse = await hubspotClient.crm.workorders.searchApi.doSearch(
+      PublicObjectSearchRequest,
+    );
+    console.log(JSON.stringify(apiResponse, null, 2));
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+  }
+}
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
+
+async function getAssociatedMessages(contactIds) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
+  try {
+    const apiResponse =
+      await hubSpotClient.crm.associations.v4.basicApi.getPage(
         "contacts",
         contactIds[0], // Use a single contact ID
         "engagements",
-        after,
-        limit,
       );
     const associatedMessages = apiResponse.results;
     const engmIds = associatedMessages.map((message) => message.toObjectId);
@@ -65,7 +234,7 @@ async function getEngagement(engagementId) {
 
   const headers = {
     accept: "application/json",
-    authorization: `Bearer ${HS_API_KEY}`,
+    authorization: `Bearer ${process.env["PRIVATE_APP_ACCESS_TOKEN"]}`,
   };
 
   try {
@@ -88,106 +257,30 @@ async function getThread(threadId) {
   const url = `https://api.hubapi.com/conversations/v3/conversations/threads/${threadId}/messages`;
   const headers = {
     accept: "application/json",
-    authorization: `Bearer ${HS_API_KEY}`,
+    authorization: `Bearer ${process.env["PRIVATE_APP_ACCESS_TOKEN"]}`,
   };
 
   try {
     const response = await axios.get(url, { headers });
-    const data = response.data;
-    const thread = data.results;
+    if (!response.data || !response.data.results) {
+      console.error("Invalid thread response format:", response.data);
+      return [];
+    }
+
+    const thread = response.data.results;
     // Filter only messages of type "MESSAGE"
     const messageThreads = thread.filter((msg) => msg.type === "MESSAGE");
-    // console.log("Message Threads: ", JSON.stringify(messageThreads, null, 2));
+    console.log(`Thread ${threadId} messages count:`, messageThreads.length);
     return messageThreads;
   } catch (error) {
-    console.error("Error fetching thread:", error.message);
-    throw error;
+    console.error("Error fetching thread:", {
+      threadId,
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      error: error.message,
+      details: error.response?.data,
+    });
+    // Return empty array instead of throwing to prevent cascade failures
+    return [];
   }
 }
-
-async function main() {
-  const contactIds = await getAssociatedContacts();
-  const engmIds = await getAssociatedMessages(contactIds);
-  let messages = [];
-  if (engmIds.length > 0) {
-    const messagePromises = engmIds.map((id) => getEngagement(id));
-    messages = await Promise.all(messagePromises);
-  }
-  // console.log("Messages: ", JSON.stringify(messages, null, 2));
-
-  // Filter messages that don't have conversationsThreadId in metadata
-  let communications = [];
-  const messagesNoThreads = messages.filter(
-    (msg) => msg.metadata && !msg.metadata.conversationsThreadId,
-  );
-  if (messagesNoThreads.length > 0) {
-    communications = messagesNoThreads;
-  }
-  // console.log("Communications: ", JSON.stringify(communications, null, 2));
-  const flatCommunications = communications.flat();
-  // console.log(
-  //   "Flatted Communications: ",
-  //   JSON.stringify(flatCommunications, null, 2),
-  // );
-  // Normalize the messages
-  const normalizedMessages = flatCommunications.map((msg) => ({
-    engagement: msg.engagement,
-    // type: msg.type,
-    // direction: msg.direction,
-    // createdAt: msg.createdAt,
-    // bodyPreview: msg.bodyPreview
-    //   .replace(/[^\w\s]/g, "")
-    //   .replace(/\n/g, " ")
-    //   .replace(/\s+/g, " ")
-    //   .trim(),
-  }));
-  // console.log(
-  //   "Normalized Messages: ",
-  //   JSON.stringify(normalizedMessages, null, 2),
-  // );
-  const messagesMetadata = normalizedMessages.map((msg) => ({
-    type: msg.engagement.type,
-    id: msg.engagement.id,
-    createdAt: msg.engagement.createdAt,
-    bodyPreview: msg.engagement.bodyPreview
-      ? msg.engagement.bodyPreview
-          .replace(/[^\p{L}\s]/gu, "")
-          .replace(/\n/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-      : "",
-  }));
-  console.log("Messages Metadata: ", JSON.stringify(messagesMetadata, null, 2));
-
-  // Filter messages that have conversationsThreadId in metadata
-  let threads = [];
-  const messagesWithThreads = messages.filter(
-    (msg) => msg.metadata && msg.metadata.conversationsThreadId,
-  );
-  if (messagesWithThreads.length > 0) {
-    const threadPromises = messagesWithThreads.map((msg) =>
-      getThread(msg.metadata.conversationsThreadId),
-    );
-    threads = await Promise.all(threadPromises);
-  }
-  // console.log("Threads: ", JSON.stringify(threads, null, 2));
-  const flatThreads = threads.flat();
-  // console.log("Flatted Threads: ", JSON.stringify(flatThreads, null, 2));
-  const threadsMetadata = flatThreads.map((msg) => ({
-    threadId: msg.conversationsThreadId,
-    channelId: msg.channelId,
-    direction: msg.direction,
-    createdAt: msg.createdAt,
-    text: msg.text
-      .replace(/[^\w\s]/g, "")
-      .replace(/\n/g, " ")
-      .replace(/\s+/g, " ")
-      .trim(),
-  }));
-  // console.log(
-  //   "Normalized Threads: ",
-  //   JSON.stringify(threadsMetadata, null, 2),
-  // );
-}
-
-main();
