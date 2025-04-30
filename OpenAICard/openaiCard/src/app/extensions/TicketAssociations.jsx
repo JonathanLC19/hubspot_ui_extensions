@@ -13,6 +13,7 @@ import {
   TableCell,
   TableRow,
   TableHeader,
+  Alert,
 } from "@hubspot/ui-extensions";
 
 // Define the Extension component
@@ -25,7 +26,7 @@ const Extension = ({
   const [description, setDescription] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
-  const [result, setResult] = useState("");
+  const [result, setResult] = useState({ associatedTickets: [], associatedWOs: [] });
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [issueType, setIssueType] = useState("");
@@ -70,8 +71,7 @@ const Extension = ({
       console.log("Full response:", response);
 
       if (response.status === "error") {
-        let errorMessage = "Error fetching SOP information";
-
+        let errorMessage = "Error fetching associations";
         if (response.error?.includes("HubSpot token")) {
           errorMessage =
             "HubSpot access token is missing or invalid. Please check your configuration.";
@@ -79,17 +79,26 @@ const Extension = ({
           errorMessage =
             "Authentication error. Please check your API credentials and permissions.";
         }
-
         setValidationMessage(errorMessage);
         setIsValid(false);
         return;
       }
 
       // Process successful response
-      setValidationMessage("Question processed successfully!");
+      const associatedData = {
+        associatedTickets: [],
+        associatedWOs: response.response.response.associatedWOs || []
+      };
+      
+      const totalAssociations = associatedData.associatedWOs.length;
+      setValidationMessage(
+        totalAssociations > 0
+          ? `Found ${totalAssociations} work orders`
+          : "No associations found"
+      );
+
       setIsValid(true);
-      setResult(response.response);
-      setCurrentDate(getDate());
+      setResult(associatedData);
     } catch (err) {
       console.error("Error in fetchTicketAssociations:", err);
       setValidationMessage("Error processing your request. Please try again.");
@@ -121,6 +130,61 @@ const Extension = ({
       <Button variant="primary" onClick={handleGetAssociationsClick}>
         Fetch Associations
       </Button>
+
+      {loading && (
+        <LoadingSpinner
+          label="Fetching associations..."
+          showLabel={true}
+          size="md"
+          layout="centered"
+        />
+      )}
+
+      {!isValid && (
+        <Alert title="Error" variant="error">
+          {validationMessage}
+        </Alert>
+      )}
+
+      {isValid && !loading && (
+        <Flex direction="column" gap="small">
+          <Divider />
+          <Alert title="Status" variant="info">
+            {validationMessage}
+          </Alert>
+
+          {/* Display Work Orders */}
+          {result.associatedWOs && result.associatedWOs.length > 0 ? (
+            <>
+              <Text format={{ fontWeight: "bold" }}>Work Orders:</Text>
+              <Table bordered={true}>
+                <TableHead>
+                  <TableRow>
+                    <TableHeader>Work Order Name</TableHeader>
+                    <TableHeader>Issue Type</TableHeader>
+                    <TableHeader>Pipeline Stage</TableHeader>
+                    <TableHeader>Created Date</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {result.associatedWOs.map((wo, index) => (
+                    <TableRow key={wo.id}>
+                      <TableCell>{wo.properties.work_order_name || "N/A"}</TableCell>
+                      <TableCell>{wo.properties.issue_type || "N/A"}</TableCell>
+                      <TableCell>{wo.properties.hs_pipeline_stage || "N/A"}</TableCell>
+                      <TableCell>
+                        {new Date(wo.properties.hs_createdate).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          ) : (
+            <Text>No work orders found for this ticket</Text>
+          )}
+        </Flex>
+      )}
     </>
   );
 };

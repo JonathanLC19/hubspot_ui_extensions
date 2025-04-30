@@ -80,6 +80,16 @@ exports.main = async (context = {}) => {
       associatedWOs = await Promise.all(workOrderPromises);
       console.log("Associated Work Orders:", associatedWOs);
     }
+
+    // Return the data
+    return {
+      status: "SUCCESS",
+      response: {
+        associatedTickets: associatedTickets.filter(Boolean),
+        associatedWOs: associatedWOs.filter(Boolean)
+      }
+    };
+
   } catch (error) {
     console.error("Serverless function error:", error);
     return {
@@ -166,6 +176,7 @@ async function searchTickets(ticketId) {
       PublicObjectSearchRequest,
     );
     console.log(JSON.stringify(apiResponse, null, 2));
+    return apiResponse.results[0];
   } catch (e) {
     e.message === "HTTP request failed"
       ? console.error(JSON.stringify(e.response, null, 2))
@@ -204,6 +215,7 @@ async function searchWOs(WOId) {
       PublicObjectSearchRequest,
     );
     console.log(JSON.stringify(apiResponse, null, 2));
+    return apiResponse.results[0];
   } catch (e) {
     e.message === "HTTP request failed"
       ? console.error(JSON.stringify(e.response, null, 2))
