@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import {
   hubspot,
+  Text,
   TextArea,
   Button,
   Divider,
@@ -29,8 +30,9 @@ const Extension = ({
   const [content, setContent] = useState("");
   const [issueType, setIssueType] = useState("");
   const [loading, setLoading] = useState(false);
-  const [hsObjectId, setHsObjectId] = useState("");
+  const [currentObjectId, setCurrentObjectId] = useState(null);
 
+  // Fetch initial properties from HubSpot
   useEffect(() => {
     fetchProperties(["subject", "content", "issue_type", "hs_object_id"])
       .then((properties) => {
@@ -40,7 +42,7 @@ const Extension = ({
           setContent(properties.content);
           setDescription(properties.content);
           setIssueType(properties.issue_type);
-          setHsObjectId(properties.hs_object_id);
+          setCurrentObjectId(properties.hs_object_id);
         } else {
           console.error(
             "Error: subject or content not found in properties:",
@@ -53,74 +55,65 @@ const Extension = ({
       });
   }, [fetchProperties]);
 
-  const fetchIssueType = async () => {
+  const fetchTicketAssociations = async () => {
     try {
-      if (!description.trim()) {
-        setValidationMessage("Please enter some text to analyze.");
-        setIsValid(false);
-        return;
-      }
-      setLoading(true); // Set loading to true when the request starts
+      setLoading(true);
+      console.log("Calling serverless function with ID:", currentObjectId);
+
       const response = await runServerless({
-        name: "issueFinder", // Replace with your actual serverless function name
-        parameters: { text: description },
+        name: "associationTest",
+        parameters: {
+          hs_object_id: currentObjectId,
+        },
       });
 
       console.log("Full response:", response);
 
-      if (response.error) {
-        setValidationMessage(
-          response.error.message || "Error fetching sentiment analysis",
-        );
+      if (response.status === "error") {
+        let errorMessage = "Error fetching SOP information";
+
+        if (response.error?.includes("HubSpot token")) {
+          errorMessage =
+            "HubSpot access token is missing or invalid. Please check your configuration.";
+        } else if (response.errors?.[0]?.message?.includes("403")) {
+          errorMessage =
+            "Authentication error. Please check your API credentials and permissions.";
+        }
+
+        setValidationMessage(errorMessage);
         setIsValid(false);
-      } else {
-        setValidationMessage("Valid description!");
-        setIsValid(true);
-        setResult(response.response.result); // Set the result from OpenAI
-        setIssueType(response.response.result.trim()); // Set the issue type directly from the result
+        return;
       }
-    } catch (err) {
-      setValidationMessage("Error fetching sentiment analysis");
-      setIsValid(false);
-      console.error(err);
-    } finally {
-      setLoading(false); // Set loading to false when the request finishes
-    }
-  };
 
-  useEffect(() => {
-    if (description) {
-      fetchIssueType();
-    }
-  }, [description]);
-
-  const handleDescriptionChange = (value) => {
-    setDescription(value);
-    if (!value.includes("http")) {
-      setValidationMessage("A link must be included.");
-      setIsValid(false);
-    } else {
-      setValidationMessage("Valid description!");
+      // Process successful response
+      setValidationMessage("Question processed successfully!");
       setIsValid(true);
+      setResult(response.response);
+      setCurrentDate(getDate());
+    } catch (err) {
+      console.error("Error in fetchTicketAssociations:", err);
+      setValidationMessage("Error processing your request. Please try again.");
+      setIsValid(false);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const onChange = (issueTypeValue) => {
-    console.log(issueTypeValue);
-    runServerless({
-      name: "updateIssueType",
-      parameters: { issueType: issueTypeValue },
-      propertiesToSend: ["hs_object_id"],
-    }).then(() => {
-      refreshObjectProperties();
+  // Handle button click to get SOP answer
+  const handleGetAssociationsClick = () => {
+    fetchTicketAssociations();
+  };
+
+  function getDate() {
+    const currentDate = new Date();
+    return currentDate.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
-  };
-
-  useEffect(() => {
-    if (issueType) {
-      onChange(issueType);
-    }
-  }, [issueType]);
+  }
 
   return (
     <>
@@ -139,7 +132,7 @@ const Extension = ({
           error={!isValid}
           validationMessage={validationMessage}
         />
-        <Button variant="primary" onClick={fetchIssueType}>
+        <Button variant="primary" onClick={handleFetchIssueTypeClick}>
           Refresh Issue Info
         </Button>
         <Divider />

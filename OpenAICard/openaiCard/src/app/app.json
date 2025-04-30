@@ -25,6 +25,10 @@
         },
         {
           "file": "extensions/helpdesk-card.json"
+        },
+
+        {
+          "file": "extensions/associations-card.json"
         }
       ]
     }

@@ -1,0 +1,16 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "🤖 Associations Assitant Card",
+    "uid": "associations_assistant_card",
+    "location": "crm.record.tab",
+    "module": {
+      "file": "TicketAssociations.jsx"
+    },
+    "objectTypes": [
+      {
+        "name": "tickets"
+      }
+    ]
+  }
+}
