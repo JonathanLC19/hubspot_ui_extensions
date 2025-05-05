@@ -86,10 +86,9 @@ exports.main = async (context = {}) => {
       status: "SUCCESS",
       response: {
         associatedTickets: associatedTickets.filter(Boolean),
-        associatedWOs: associatedWOs.filter(Boolean)
-      }
+        associatedWOs: associatedWOs.filter(Boolean),
+      },
     };
-
   } catch (error) {
     console.error("Serverless function error:", error);
     return {
@@ -132,7 +131,7 @@ async function getAssociatedWOs(hs_object_id) {
       await hubSpotClient.crm.associations.v4.basicApi.getPage(
         "tickets",
         hs_object_id,
-        "workorders",
+        "2-134296003",
       );
     const AssociatedWOs = apiResponse.results;
     const WOIds = AssociatedWOs.map((workorder) => workorder.toObjectId);
@@ -211,7 +210,7 @@ async function searchWOs(WOId) {
 
   try {
     const apiResponse = await hubSpotClient.crm.objects.searchApi.doSearch(
-      "workorders",
+      "2-134296003",
       PublicObjectSearchRequest,
     );
     console.log(JSON.stringify(apiResponse, null, 2));
