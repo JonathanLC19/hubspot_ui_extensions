@@ -81,12 +81,21 @@ exports.main = async (context = {}) => {
       console.log("Associated Work Orders:", associatedWOs);
     }
 
+    const noteIds = await getNotesIds(workOrderIds);
+    let notes = [];
+    if (noteIds.length > 0) {
+      const notePromises = noteIds.map((id) => readNotes(id));
+      notes = await Promise.all(notePromises);
+    }
+    console.log("Notes: ", JSON.stringify(notes, null, 2));
+
     // Return the data
     return {
       status: "SUCCESS",
       response: {
         associatedTickets: associatedTickets.filter(Boolean),
         associatedWOs: associatedWOs.filter(Boolean),
+        // associatedWONotes: associatedWONotes.filter(Boolean),
       },
     };
   } catch (error) {
@@ -174,7 +183,7 @@ async function searchTickets(ticketId) {
     const apiResponse = await hubSpotClient.crm.tickets.searchApi.doSearch(
       PublicObjectSearchRequest,
     );
-    console.log(JSON.stringify(apiResponse, null, 2));
+    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse.results[0];
   } catch (e) {
     e.message === "HTTP request failed"
@@ -213,7 +222,7 @@ async function searchWOs(WOId) {
       "2-134296003",
       PublicObjectSearchRequest,
     );
-    console.log(JSON.stringify(apiResponse, null, 2));
+    // console.log(JSON.stringify(apiResponse, null, 2));
     return apiResponse.results[0];
   } catch (e) {
     e.message === "HTTP request failed"
@@ -221,25 +230,69 @@ async function searchWOs(WOId) {
       : console.error(e);
   }
 }
+
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-async function getAssociatedMessages(contactIds) {
+async function getNotesIds(WOIds) {
   const hubSpotClient = new hubspot.Client({
     accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
   });
   try {
-    const apiResponse =
-      await hubSpotClient.crm.associations.v4.basicApi.getPage(
-        "contacts",
-        contactIds[0], // Use a single contact ID
-        "engagements",
-      );
-    const associatedMessages = apiResponse.results;
-    const engmIds = associatedMessages.map((message) => message.toObjectId);
-    // console.log(JSON.stringify(associatedMessages, null, 2));
-    // console.log(JSON.stringify(msgIds, null, 2));
-    return engmIds;
+    if (!WOIds || !Array.isArray(WOIds) || WOIds.length === 0) {
+      console.log("No Work Order IDs provided or invalid input");
+      return [];
+    }
+
+    // Get notes for all work orders
+    const notesPromises = WOIds.map(async (WOId) => {
+      try {
+        const apiResponse =
+          await hubSpotClient.crm.associations.v4.basicApi.getPage(
+            "2-134296003",
+            WOId,
+            "notes",
+          );
+        return apiResponse.results.map((message) => message.toObjectId);
+      } catch (e) {
+        console.error(`Error getting notes for WO ${WOId}:`, e);
+        return [];
+      }
+    });
+
+    const allNotes = await Promise.all(notesPromises);
+    // Flatten the array of arrays and remove duplicates
+    return [...new Set(allNotes.flat())];
+  } catch (e) {
+    console.error("Error in getNotesIds:", e);
+    if (e.message === "HTTP request failed") {
+      console.error(JSON.stringify(e.response, null, 2));
+    }
+    return [];
+  }
+}
+
+async function readNotes(noteId) {
+  const hubspotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
+
+  const properties = ["hs_note_body", "hubspot_owner_id", "hs_timestamp"];
+  const propertiesWithHistory = undefined;
+  const associations = undefined;
+  const archived = false;
+  const idProperty = undefined;
+
+  try {
+    const apiResponse = await hubspotClient.crm.objects.notes.basicApi.getById(
+      noteId,
+      properties,
+      propertiesWithHistory,
+      associations,
+      archived,
+      idProperty,
+    );
+    return apiResponse;
   } catch (e) {
     e.message === "HTTP request failed"
       ? console.error(JSON.stringify(e.response, null, 2))
@@ -247,58 +300,103 @@ async function getAssociatedMessages(contactIds) {
   }
 }
 
-async function getEngagement(engagementId) {
-  const url = `https://api.hubapi.com/engagements/v1/engagements/${engagementId}`;
+/////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////
 
-  const headers = {
-    accept: "application/json",
-    authorization: `Bearer ${process.env["PRIVATE_APP_ACCESS_TOKEN"]}`,
-  };
-
+async function getNotesIds(WOIds) {
+  const hubSpotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
   try {
-    const response = await axios.get(url, { headers });
-    // console.log("Engagement data:", JSON.stringify(response.data, null, 2));
-    // console.log(
-    //   "#######################################################################",
-    // );
-    // console.log(
-    //   "#######################################################################",
-    // );
-    return response.data;
-  } catch (error) {
-    console.error("Error fetching engagement:", error.message);
-    throw error;
-  }
-}
-
-async function getThread(threadId) {
-  const url = `https://api.hubapi.com/conversations/v3/conversations/threads/${threadId}/messages`;
-  const headers = {
-    accept: "application/json",
-    authorization: `Bearer ${process.env["PRIVATE_APP_ACCESS_TOKEN"]}`,
-  };
-
-  try {
-    const response = await axios.get(url, { headers });
-    if (!response.data || !response.data.results) {
-      console.error("Invalid thread response format:", response.data);
+    if (!WOIds || !Array.isArray(WOIds) || WOIds.length === 0) {
+      console.log("No Work Order IDs provided or invalid input");
       return [];
     }
 
-    const thread = response.data.results;
-    // Filter only messages of type "MESSAGE"
-    const messageThreads = thread.filter((msg) => msg.type === "MESSAGE");
-    console.log(`Thread ${threadId} messages count:`, messageThreads.length);
-    return messageThreads;
-  } catch (error) {
-    console.error("Error fetching thread:", {
-      threadId,
-      status: error.response?.status,
-      statusText: error.response?.statusText,
-      error: error.message,
-      details: error.response?.data,
+    // Get notes for all work orders
+    const notesPromises = WOIds.map(async (WOId) => {
+      try {
+        const apiResponse =
+          await hubSpotClient.crm.associations.v4.basicApi.getPage(
+            "2-134296003",
+            WOId,
+            "notes",
+          );
+        return apiResponse.results.map((message) => message.toObjectId);
+      } catch (e) {
+        console.error(`Error getting notes for WO ${WOId}:`, e);
+        return [];
+      }
     });
-    // Return empty array instead of throwing to prevent cascade failures
+
+    const allNotes = await Promise.all(notesPromises);
+    // Flatten the array of arrays and remove duplicates
+    return [...new Set(allNotes.flat())];
+  } catch (e) {
+    console.error("Error in getNotesIds:", e);
+    if (e.message === "HTTP request failed") {
+      console.error(JSON.stringify(e.response, null, 2));
+    }
     return [];
   }
 }
+
+async function readNotes(noteId) {
+  const hubspotClient = new hubspot.Client({
+    accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
+  });
+
+  const properties = ["hs_note_body", "hubspot_owner_id", "hs_timestamp"];
+  const propertiesWithHistory = undefined;
+  const associations = undefined;
+  const archived = false;
+  const idProperty = undefined;
+
+  try {
+    const apiResponse = await hubspotClient.crm.objects.notes.basicApi.getById(
+      noteId,
+      properties,
+      propertiesWithHistory,
+      associations,
+      archived,
+      idProperty,
+    );
+    return apiResponse;
+  } catch (e) {
+    e.message === "HTTP request failed"
+      ? console.error(JSON.stringify(e.response, null, 2))
+      : console.error(e);
+  }
+}
+
+// async function getThread(threadId) {
+//   const url = `https://api.hubapi.com/conversations/v3/conversations/threads/${threadId}/messages`;
+//   const headers = {
+//     accept: "application/json",
+//     authorization: `Bearer ${process.env["PRIVATE_APP_ACCESS_TOKEN"]}`,
+//   };
+
+//   try {
+//     const response = await axios.get(url, { headers });
+//     if (!response.data || !response.data.results) {
+//       console.error("Invalid thread response format:", response.data);
+//       return [];
+//     }
+
+//     const thread = response.data.results;
+//     // Filter only messages of type "MESSAGE"
+//     const messageThreads = thread.filter((msg) => msg.type === "MESSAGE");
+//     console.log(`Thread ${threadId} messages count:`, messageThreads.length);
+//     return messageThreads;
+//   } catch (error) {
+//     console.error("Error fetching thread:", {
+//       threadId,
+//       status: error.response?.status,
+//       statusText: error.response?.statusText,
+//       error: error.message,
+//       details: error.response?.data,
+//     });
+//     // Return empty array instead of throwing to prevent cascade failures
+//     return [];
+//   }
+// }
