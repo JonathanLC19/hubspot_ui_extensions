@@ -213,6 +213,7 @@ const Extension = ({
                       <TableCell>
                         {tck.properties.hs_pipeline_stage || "N/A"}
                       </TableCell>
+                      <TableCell>{tck.properties.content || "N/A"}</TableCell>
                       <TableCell>
                         {new Date(
                           tck.properties.createdate,

@@ -169,6 +169,7 @@ async function searchTickets(ticketId) {
   const PublicObjectSearchRequest = {
     properties: [
       "subject",
+      "content",
       "hs_pipeline",
       "hs_pipeline_stage",
       "hubspot_owner_id",
