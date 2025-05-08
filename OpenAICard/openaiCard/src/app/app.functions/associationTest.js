@@ -15,7 +15,7 @@ dotenv.config();
 // Entry function of this module, it fetches associated deals and calculates the statistics
 exports.main = async (context = {}) => {
   try {
-    const { hs_object_id, source_type, content } = context.parameters;
+    const { hs_object_id, source_type, content } = context.propertiesToSend;
 
     // Verify HubSpot token first
     const hubspotToken = process.env.PRIVATE_APP_ACCESS_TOKEN;
