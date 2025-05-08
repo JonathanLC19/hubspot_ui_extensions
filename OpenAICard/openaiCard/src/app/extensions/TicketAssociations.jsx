@@ -26,7 +26,10 @@ const Extension = ({
   const [description, setDescription] = useState("");
   const [isValid, setIsValid] = useState(true);
   const [validationMessage, setValidationMessage] = useState("");
-  const [result, setResult] = useState({ associatedTickets: [], associatedWOs: [] });
+  const [result, setResult] = useState({
+    associatedTickets: [],
+    associatedWOs: [],
+  });
   const [subject, setSubject] = useState("");
   const [content, setContent] = useState("");
   const [issueType, setIssueType] = useState("");
@@ -86,15 +89,16 @@ const Extension = ({
 
       // Process successful response
       const associatedData = {
-        associatedTickets: [],
-        associatedWOs: response.response.response.associatedWOs || []
+        associatedTickets: response.response.response.associatedTickets || [],
+        associatedWOs: response.response.response.associatedWOs || [],
       };
-      
-      const totalAssociations = associatedData.associatedWOs.length;
+
+      const totalWOAssociations = associatedData.associatedWOs.length;
+      const totalTicketAssociations = associatedData.associatedTickets.length;
       setValidationMessage(
-        totalAssociations > 0
-          ? `Found ${totalAssociations} work orders`
-          : "No associations found"
+        totalWOAssociations > 0 || totalTicketAssociations > 0
+          ? `Found ${totalWOAssociations} work orders and ${totalTicketAssociations} tickets`
+          : "No associations found",
       );
 
       setIsValid(true);
@@ -126,7 +130,6 @@ const Extension = ({
 
   return (
     <>
-      <Text>Ticket Associations</Text>
       <Button variant="primary" onClick={handleGetAssociationsClick}>
         Fetch Associations
       </Button>
@@ -148,10 +151,10 @@ const Extension = ({
 
       {isValid && !loading && (
         <Flex direction="column" gap="small">
-          <Divider />
+          {/* <Divider />
           <Alert title="Status" variant="info">
             {validationMessage}
-          </Alert>
+          </Alert> */}
 
           {/* Display Work Orders */}
           {result.associatedWOs && result.associatedWOs.length > 0 ? (
@@ -169,20 +172,58 @@ const Extension = ({
                 <TableBody>
                   {result.associatedWOs.map((wo, index) => (
                     <TableRow key={wo.id}>
-                      <TableCell>{wo.properties.work_order_name || "N/A"}</TableCell>
-                      <TableCell>{wo.properties.issue_type || "N/A"}</TableCell>
-                      <TableCell>{wo.properties.hs_pipeline_stage || "N/A"}</TableCell>
                       <TableCell>
-                        {new Date(wo.properties.hs_createdate).toLocaleDateString()}
+                        {wo.properties.work_order_name || "N/A"}
+                      </TableCell>
+                      <TableCell>{wo.properties.issue_type || "N/A"}</TableCell>
+                      <TableCell>
+                        {wo.properties.hs_pipeline_stage || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(
+                          wo.properties.hs_createdate,
+                        ).toLocaleDateString()}
                       </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </>
-          ) : (
-            <Text>No work orders found for this ticket</Text>
-          )}
+          ) : null}
+          {/* Display Tickets */}
+          {result.associatedTickets && result.associatedTickets.length > 0 ? (
+            <>
+              <Text format={{ fontWeight: "bold" }}>Tickets:</Text>
+              <Table bordered={true}>
+                <TableHead>
+                  <TableRow>
+                    <TableHeader>Ticket Name</TableHeader>
+                    <TableHeader>Issue Type</TableHeader>
+                    <TableHeader>Pipeline Stage</TableHeader>
+                    <TableHeader>Created Date</TableHeader>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {result.associatedTickets.map((tck, index) => (
+                    <TableRow key={tck.id}>
+                      <TableCell>{tck.properties.subject || "N/A"}</TableCell>
+                      <TableCell>
+                        {tck.properties.issue_type || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {tck.properties.hs_pipeline_stage || "N/A"}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(
+                          tck.properties.createdate,
+                        ).toLocaleDateString()}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          ) : null}
         </Flex>
       )}
     </>
