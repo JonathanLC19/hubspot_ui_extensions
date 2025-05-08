@@ -89,6 +89,14 @@ exports.main = async (context = {}) => {
     }
     console.log("Notes: ", JSON.stringify(notes, null, 2));
 
+    const taskIds = await getTasksIds(workOrderIds);
+    let tasks = [];
+    if (taskIds.length > 0) {
+      const taskPromises = taskIds.map((id) => readTasks(id));
+      tasks = await Promise.all(taskPromises);
+    }
+    console.log("Tasks: ", JSON.stringify(tasks, null, 2));
+
     // Return the data
     return {
       status: "SUCCESS",
@@ -303,7 +311,7 @@ async function readNotes(noteId) {
 /////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////
 
-async function getNotesIds(WOIds) {
+async function getTasksIds(WOIds) {
   const hubSpotClient = new hubspot.Client({
     accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
   });
@@ -320,7 +328,7 @@ async function getNotesIds(WOIds) {
           await hubSpotClient.crm.associations.v4.basicApi.getPage(
             "2-134296003",
             WOId,
-            "notes",
+            "tasks",
           );
         return apiResponse.results.map((message) => message.toObjectId);
       } catch (e) {
@@ -341,20 +349,26 @@ async function getNotesIds(WOIds) {
   }
 }
 
-async function readNotes(noteId) {
+async function readTasks(taskId) {
   const hubspotClient = new hubspot.Client({
     accessToken: process.env["PRIVATE_APP_ACCESS_TOKEN"],
   });
 
-  const properties = ["hs_note_body", "hubspot_owner_id", "hs_timestamp"];
+  const properties = [
+    "hs_task_subject",
+    "hs_task_body",
+    "hs_task_status",
+    "hubspot_owner_id",
+    "hs_timestamp",
+  ];
   const propertiesWithHistory = undefined;
   const associations = undefined;
   const archived = false;
   const idProperty = undefined;
 
   try {
-    const apiResponse = await hubspotClient.crm.objects.notes.basicApi.getById(
-      noteId,
+    const apiResponse = await hubspotClient.crm.objects.tasks.basicApi.getById(
+      taskId,
       properties,
       propertiesWithHistory,
       associations,
