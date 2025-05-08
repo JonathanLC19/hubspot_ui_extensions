@@ -14,6 +14,8 @@ import {
   TableRow,
   TableHeader,
   Alert,
+  Tab,
+  Tabs,
 } from "@hubspot/ui-extensions";
 
 // Define the Extension component
@@ -151,80 +153,85 @@ const Extension = ({
 
       {isValid && !loading && (
         <Flex direction="column" gap="small">
-          {/* <Divider />
-          <Alert title="Status" variant="info">
-            {validationMessage}
-          </Alert> */}
-
-          {/* Display Work Orders */}
-          {result.associatedWOs && result.associatedWOs.length > 0 ? (
-            <>
-              <Text format={{ fontWeight: "bold" }}>Work Orders:</Text>
-              <Table bordered={true}>
-                <TableHead>
-                  <TableRow>
-                    <TableHeader>Work Order Name</TableHeader>
-                    <TableHeader>Issue Type</TableHeader>
-                    <TableHeader>Pipeline Stage</TableHeader>
-                    <TableHeader>Created Date</TableHeader>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {result.associatedWOs.map((wo, index) => (
-                    <TableRow key={wo.id}>
-                      <TableCell>
-                        {wo.properties.work_order_name || "N/A"}
-                      </TableCell>
-                      <TableCell>{wo.properties.issue_type || "N/A"}</TableCell>
-                      <TableCell>
-                        {wo.properties.hs_pipeline_stage || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {new Date(
-                          wo.properties.hs_createdate,
-                        ).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </>
-          ) : null}
-          {/* Display Tickets */}
-          {result.associatedTickets && result.associatedTickets.length > 0 ? (
-            <>
-              <Text format={{ fontWeight: "bold" }}>Tickets:</Text>
-              <Table bordered={true}>
-                <TableHead>
-                  <TableRow>
-                    <TableHeader>Ticket Name</TableHeader>
-                    <TableHeader>Issue Type</TableHeader>
-                    <TableHeader>Pipeline Stage</TableHeader>
-                    <TableHeader>Created Date</TableHeader>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {result.associatedTickets.map((tck, index) => (
-                    <TableRow key={tck.id}>
-                      <TableCell>{tck.properties.subject || "N/A"}</TableCell>
-                      <TableCell>
-                        {tck.properties.issue_type || "N/A"}
-                      </TableCell>
-                      <TableCell>
-                        {tck.properties.hs_pipeline_stage || "N/A"}
-                      </TableCell>
-                      <TableCell>{tck.properties.content || "N/A"}</TableCell>
-                      <TableCell>
-                        {new Date(
-                          tck.properties.createdate,
-                        ).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </>
-          ) : null}
+          <Tabs defaultSelected="first">
+            <Tab tabId="first" title="Work Orders">
+              {result.associatedWOs && result.associatedWOs.length > 0 ? (
+                <>
+                  <Table bordered={true}>
+                    <TableHead>
+                      <TableRow>
+                        <TableHeader>Work Order Name</TableHeader>
+                        <TableHeader>Issue Type</TableHeader>
+                        <TableHeader>Pipeline Stage</TableHeader>
+                        <TableHeader>Created Date</TableHeader>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {result.associatedWOs.map((wo, index) => (
+                        <TableRow key={wo.id}>
+                          <TableCell>
+                            {wo.properties.work_order_name || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {wo.properties.issue_type || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {wo.properties.hs_pipeline_stage || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(
+                              wo.properties.hs_createdate,
+                            ).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              ) : null}
+            </Tab>
+            <Tab tabId="second" title="Tickets">
+              {result.associatedTickets &&
+              result.associatedTickets.length > 0 ? (
+                <>
+                  <Table bordered={true}>
+                    <TableHead>
+                      <TableRow>
+                        <TableHeader>Ticket Name</TableHeader>
+                        <TableHeader>Issue Type</TableHeader>
+                        <TableHeader>Pipeline Stage</TableHeader>
+                        <TableHeader>Content</TableHeader>
+                        <TableHeader>Created Date</TableHeader>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {result.associatedTickets.map((tck, index) => (
+                        <TableRow key={tck.id}>
+                          <TableCell>
+                            {tck.properties.subject || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {tck.properties.issue_type || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {tck.properties.hs_pipeline_stage || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {tck.properties.content || "N/A"}
+                          </TableCell>
+                          <TableCell>
+                            {new Date(
+                              tck.properties.createdate,
+                            ).toLocaleDateString()}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </>
+              ) : null}
+            </Tab>
+          </Tabs>
         </Flex>
       )}
     </>
