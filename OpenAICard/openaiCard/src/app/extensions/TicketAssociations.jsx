@@ -10,6 +10,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Accordion,
+  Box,
+  Heading,
 } from "@hubspot/ui-extensions";
 import { hubspot } from "@hubspot/ui-extensions";
 
@@ -58,7 +61,7 @@ const AssociationsSummary = () => {
     );
   }
   return (
-    <Flex direction="column" gap="small">
+    <Flex direction="column" gap="md">
       {/* <Divider />
           <Alert title="Status" variant="info">
             {validationMessage}
@@ -67,65 +70,64 @@ const AssociationsSummary = () => {
       {/* Display Work Orders */}
       {result.associatedWOs && result.associatedWOs.length > 0 ? (
         <>
-          <Text format={{ fontWeight: "bold" }}>Work Orders:</Text>
-          <Table bordered={true}>
-            <TableHead>
-              <TableRow>
-                <TableHeader>Work Order Name</TableHeader>
-                <TableHeader>Issue Type</TableHeader>
-                <TableHeader>Pipeline Stage</TableHeader>
-                <TableHeader>Created Date</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {result.associatedWOs.map((wo, index) => (
-                <TableRow key={wo.id}>
-                  <TableCell>
-                    {wo.properties.work_order_name || "N/A"}
-                  </TableCell>
-                  <TableCell>{wo.properties.issue_type || "N/A"}</TableCell>
-                  <TableCell>
-                    {wo.properties.hs_pipeline_stage || "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {new Date(wo.properties.hs_createdate).toLocaleDateString()}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <Accordion title="Work Orders" defaultOpen={true}>
+            {result.associatedWOs.map((wo, index) => (
+              <Flex direction="row" justify="start" gap="md">
+                <Box flex={1}>
+                  <Heading>{wo.properties.work_order_name || "N/A"}</Heading>
+                  <Flex direction="row" justify="start" gap="sm">
+                    <Box>
+                      <Text format={{ fontWeight: "bold" }}>Issue Type</Text>
+                      <Text>{wo.properties.issue_type || "N/A"}</Text>
+                    </Box>
+                    <Box>
+                      <Text format={{ fontWeight: "bold" }}>Stage</Text>
+                      <Text>{wo.properties.hs_pipeline_stage || "N/A"}</Text>
+                    </Box>
+                  </Flex>
+                </Box>
+              </Flex>
+            ))}
+          </Accordion>
         </>
       ) : null}
       {/* Display Tickets */}
       {result.associatedTickets && result.associatedTickets.length > 0 ? (
         <>
-          <Text format={{ fontWeight: "bold" }}>Tickets:</Text>
-          <Table bordered={true}>
-            <TableHead>
-              <TableRow>
-                <TableHeader>Ticket Name</TableHeader>
-                <TableHeader>Issue Type</TableHeader>
-                <TableHeader>Pipeline Stage</TableHeader>
-                <TableHeader>Description</TableHeader>
-                <TableHeader>Created Date</TableHeader>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {result.associatedTickets.map((tck, index) => (
-                <TableRow key={tck.id}>
-                  <TableCell>{tck.properties.subject || "N/A"}</TableCell>
-                  <TableCell>{tck.properties.issue_type || "N/A"}</TableCell>
-                  <TableCell>
-                    {tck.properties.hs_pipeline_stage || "N/A"}
-                  </TableCell>
-                  <TableCell>{tck.properties.content || "N/A"}</TableCell>
-                  <TableCell>
-                    {new Date(tck.properties.createdate).toLocaleDateString()}
-                  </TableCell>
+          <Accordion title="Tickets" defaultOpen={false}>
+            {result.associatedTickets.map((tck, index) => (
+              <Box flex={1}>
+                <Heading>{tck.properties.subject || "N/A"}</Heading>
+              </Box>
+            ))}
+            <Text format={{ fontWeight: "bold" }}>Tickets:</Text>
+            <Table bordered={true}>
+              <TableHead>
+                <TableRow>
+                  <TableHeader>Ticket Name</TableHeader>
+                  <TableHeader>Issue Type</TableHeader>
+                  <TableHeader>Pipeline Stage</TableHeader>
+                  <TableHeader>Description</TableHeader>
+                  <TableHeader>Created Date</TableHeader>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHead>
+              <TableBody>
+                {result.associatedTickets.map((tck, index) => (
+                  <TableRow key={tck.id}>
+                    <TableCell>{tck.properties.subject || "N/A"}</TableCell>
+                    <TableCell>{tck.properties.issue_type || "N/A"}</TableCell>
+                    <TableCell>
+                      {tck.properties.hs_pipeline_stage || "N/A"}
+                    </TableCell>
+                    <TableCell>{tck.properties.content || "N/A"}</TableCell>
+                    <TableCell>
+                      {new Date(tck.properties.createdate).toLocaleDateString()}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </Accordion>
         </>
       ) : null}
     </Flex>
