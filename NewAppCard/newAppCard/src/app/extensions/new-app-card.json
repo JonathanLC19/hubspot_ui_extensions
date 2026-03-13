@@ -1,0 +1,16 @@
+{
+  "type": "crm-card",
+  "data": {
+    "title": "New App Card",
+    "uid": "new_app_card_crm_card",
+    "location": "crm.record.sidebar",
+    "module": {
+      "file": "NewAppCard.jsx"
+    },
+    "objectTypes": [
+      {
+        "name": "contacts"
+      }
+    ]
+  }
+}
