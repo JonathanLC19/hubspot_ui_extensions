@@ -1,0 +1,8 @@
+{
+    "uid": "get_school_ids",
+    "type": "app-function",
+    "config": {
+        "entrypoint": "/app/functions/getSchoolIDs.js",
+        "secretKeys": []
+    }
+}
